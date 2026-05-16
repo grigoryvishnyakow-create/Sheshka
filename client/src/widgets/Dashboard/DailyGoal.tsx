@@ -1,3 +1,4 @@
+// Обновленный DailyGoal.tsx
 import styled from "styled-components";
 
 interface DailyGoalProps {
@@ -51,6 +52,7 @@ const Fill = styled.div<{ $percent: number }>`
   width: ${({ $percent }) => $percent}%;
   background: #006e1d;
   border-radius: 999px;
+  transition: width 0.3s ease;
 `;
 
 const Hint = styled.p`

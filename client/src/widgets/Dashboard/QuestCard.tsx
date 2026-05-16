@@ -1,24 +1,32 @@
+// Обновленный QuestCard.tsx
 import styled from "styled-components";
+import { useState } from "react";
 
 interface QuestCardProps {
   icon: string;
   title: string;
   description: string;
   points: number;
+  questId: string; // НОВЫЙ ПРОПС
   variant?: "primary" | "tertiary";
   onStart?: () => void;
+  studentId?: number; // НОВЫЙ ПРОПС
+  onComplete?: (points: number) => void; // НОВЫЙ ПРОПС
+  disabled?: boolean; // НОВЫЙ ПРОПС ДЛЯ ВЫПОЛНЕННЫХ КВЕСТОВ
 }
 
-const Card = styled.div`
+const Card = styled.div<{ $disabled?: boolean }>`
   background-color: #fff;
   font-family: "Inter", sans-serif;
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   transition: transform 0.2s;
+  opacity: ${({ $disabled }) => ($disabled ? 0.6 : 1)};
+  cursor: ${({ $disabled }) => ($disabled ? "default" : "pointer")};
 
   &:hover {
-    transform: translateY(-4px);
+    transform: ${({ $disabled }) => ($disabled ? "none" : "translateY(-4px)")};
   }
 `;
 
@@ -95,18 +103,18 @@ const Points = styled.span`
   color: #005314;
 `;
 
-const Button = styled.button`
-  background: #075fab;
+const Button = styled.button<{ $completed?: boolean }>`
+  background: ${({ $completed }) => ($completed ? "#006e1d" : "#075fab")};
   color: #ffffff;
   padding: 8px 24px;
   border-radius: 999px;
   border: none;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
+  cursor: ${({ $completed }) => ($completed ? "default" : "pointer")};
 
   &:hover {
-    opacity: 0.9;
+    opacity: ${({ $completed }) => ($completed ? 1 : 0.9)};
   }
 `;
 
@@ -115,11 +123,50 @@ function QuestCard({
   title,
   description,
   points,
+  questId,
   variant = "primary",
-  onStart, // 👈 ВОТ ЭТО ТЫ ЗАБЫЛ
+  onStart,
+  studentId,
+  onComplete,
+  disabled = false,
 }: QuestCardProps) {
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [completed, setCompleted] = useState(false);
+
+  const handleClick = async () => {
+    if (disabled || completed || !studentId || !onComplete) return;
+
+    setIsCompleting(true);
+    try {
+      const response = await fetch(`/api/student/${studentId}/complete-quest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quest_id: questId,
+          points: points,
+          quest_title: title,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setCompleted(true);
+        onComplete(points);
+        if (onStart) onStart();
+      } else {
+        alert(data.message || "Ошибка при выполнении квеста");
+      }
+    } catch (error) {
+      console.error("Ошибка:", error);
+      alert("Ошибка соединения с сервером");
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   return (
-    <Card>
+    <Card $disabled={disabled || completed}>
       <Inner>
         <IconBox $variant={variant}>
           <Icon $variant={variant}>{icon}</Icon>
@@ -135,7 +182,17 @@ function QuestCard({
               <Points>+{points} шешей</Points>
             </Badge>
 
-            <Button onClick={onStart}>Начать</Button>
+            <Button
+              onClick={handleClick}
+              disabled={disabled || completed || isCompleting}
+              $completed={completed}
+            >
+              {isCompleting
+                ? "Выполняется..."
+                : completed
+                  ? "Выполнено ✓"
+                  : "Начать"}
+            </Button>
           </Footer>
         </Content>
       </Inner>

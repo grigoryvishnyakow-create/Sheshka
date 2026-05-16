@@ -51,10 +51,10 @@ function App() {
     setActiveTab(tab);
   };
 
-   // ПРОСТАЯ ПРОВЕРКА - ТОЛЬКО LOCALSTORAGE, БЕЗ ЗАПРОСА К API
+  // ПРОСТАЯ ПРОВЕРКА - ТОЛЬКО LOCALSTORAGE, БЕЗ ЗАПРОСА К API
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    
+    const savedUser = localStorage.getItem("user");
+
     if (savedUser) {
       try {
         const user = JSON.parse(savedUser);
@@ -62,7 +62,7 @@ function App() {
         setAuthMode("authenticated");
       } catch (error) {
         console.error("Ошибка парсинга user:", error);
-        localStorage.removeItem('user');
+        localStorage.removeItem("user");
       }
     }
   }, []);
@@ -72,7 +72,7 @@ function App() {
     try {
       const response = await fetch(`/api/student/${userId}/balance`);
       const data = await response.json();
-      
+
       if (data.success) {
         setBalance(data.points);
       }
@@ -83,8 +83,8 @@ function App() {
 
   // ПРИ ВХОДЕ - ЗАГРУЖАЕМ БАЛАНС ИЗ БД
   const handleLoginSuccess = async () => {
-    const savedUser = localStorage.getItem('user');
-    
+    const savedUser = localStorage.getItem("user");
+
     if (savedUser) {
       const user = JSON.parse(savedUser);
       await loadBalanceFromDB(user.id);
@@ -96,8 +96,8 @@ function App() {
 
   // ПРИ РЕГИСТРАЦИИ - БАЛАНС 100 УЖЕ В БД (БЕКЕНД УСТАНАВЛИВАЕТ 100)
   const handleRegisterSuccess = async () => {
-    const savedUser = localStorage.getItem('user');
-    
+    const savedUser = localStorage.getItem("user");
+
     if (savedUser) {
       const user = JSON.parse(savedUser);
       setBalance(100); // ВРЕМЕННО ПОКАЗЫВАЕМ 100, ПОТОМ ПОДТВЕРДИМ ИЗ БД
@@ -111,7 +111,7 @@ function App() {
 
   // ПРИ ВЫХОДЕ - ОЧИЩАЕМ
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    localStorage.removeItem("user");
     setAuthMode("login");
     setBalance(0);
   };
@@ -119,7 +119,7 @@ function App() {
   // ПРИ ЗАГРУЗКЕ АУТЕНТИФИЦИРОВАННОГО СОСТОЯНИЯ - ЗАГРУЖАЕМ БАЛАНС
   useEffect(() => {
     if (authMode === "authenticated") {
-      const savedUser = localStorage.getItem('user');
+      const savedUser = localStorage.getItem("user");
       if (savedUser) {
         const user = JSON.parse(savedUser);
         loadBalanceFromDB(user.id);
@@ -173,7 +173,6 @@ function App() {
     );
   }
 
-  // Authenticated state - show main app
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyle />
@@ -184,8 +183,13 @@ function App() {
       <div>
         <Header balance={balance} onLogout={handleLogout} />
         <main>
-{activeTab === "dashboard" && (
-            <Dashboard balance={balance} onNavigate={handleNavigate} />
+          {activeTab === "dashboard" && (
+            <Dashboard
+              balance={balance}
+              studentId={currentUserId!}
+              onNavigate={handleNavigate}
+              onBalanceUpdate={setBalance}
+            />
           )}
           {activeTab === "history" && <History />}
           {activeTab === "teachers" && <TeachersPage />}
