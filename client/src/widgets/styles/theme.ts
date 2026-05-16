@@ -1,0 +1,52 @@
+// styles/theme.ts
+export const theme = {
+  colors: {
+    primary: "#075fab",
+    secondary: "#006e1d",
+    tertiary: "#775a00",
+    background: "#f7f9fc",
+    surface: "#f7f9fc",
+    "surface-container-lowest": "#ffffff",
+    "surface-container-low": "#f2f4f7",
+    "surface-container": "#eceef1",
+    "surface-container-high": "#e6e8eb",
+    "surface-container-highest": "#e0e3e6",
+    "on-surface": "#191c1e",
+    "on-surface-variant": "#414751",
+    outline: "#727782",
+    "outline-variant": "#c1c6d3",
+    "primary-container": "#5d9cec",
+    "on-primary-container": "#003260",
+    "secondary-container": "#94f991",
+    "on-secondary-container": "#00751f",
+    error: "#ba1a1a",
+    "error-container": "#ffdad6",
+    "on-error": "#ffffff",
+    "on-primary": "#ffffff",
+    "on-secondary": "#ffffff",
+  },
+  borderRadius: {
+    DEFAULT: "1rem",
+    lg: "2rem",
+    full: "9999px",
+  },
+  spacing: {
+    xs: "4px",
+    sm: "12px",
+    md: "24px",
+    lg: "48px",
+    gutter: "24px",
+    "margin-mobile": "16px",
+  },
+  fontSize: {
+    "label-sm": "12px",
+    "label-md": "14px",
+    "body-sm": "14px",
+    "body-md": "16px",
+    "body-lg": "18px",
+    "headline-md": "24px",
+    "headline-lg": "32px",
+  },
+};
+
+export type Theme = typeof theme;
