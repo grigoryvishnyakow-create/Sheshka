@@ -18,7 +18,7 @@ class Student(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Дополнительные поля для вашего приложения
-    student_id = db.Column(db.String(50), unique=True, nullable=True)  # ID студента (SH-2024-XXXX)
+    # student_id = db.Column(db.String(50), unique=True, nullable=True)  # ID студента (SH-2024-XXXX)
     email = db.Column(db.String(120), unique=True, nullable=True)      # Email
     
     def to_dict(self):
@@ -32,7 +32,7 @@ class Student(db.Model):
             'login': self.login,
             'points': self.points,
             'curator': self.curator,
-            'student_id': self.student_id,
+            # 'student_id': self.student_id,
             'email': self.email,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }

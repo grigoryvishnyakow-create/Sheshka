@@ -16,7 +16,6 @@ interface FormData {
   email: string;
   password: string;
   confirmPassword: string;
-  studentId: string;
   agreeTerms: boolean;
 }
 
@@ -26,7 +25,6 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
-  studentId?: string;
   agreeTerms?: string;
 }
 
@@ -213,6 +211,31 @@ const ErrorMessage = styled.span`
   text-align: center;
 `;
 
+// КОМПОНЕНТ ДЛЯ ОТОБРАЖЕНИЯ ТРЕБОВАНИЙ К ПАРОЛЮ
+const PasswordRequirements = styled.div`
+  font-size: ${theme.fontSize["label-sm"]};
+  color: ${theme.colors["on-surface-variant"]};
+  margin-top: ${theme.spacing.xs};
+  padding-left: ${theme.spacing.sm};
+  
+  ul {
+    margin-top: 4px;
+    padding-left: 20px;
+  }
+  
+  li {
+    margin-bottom: 2px;
+  }
+  
+  .valid {
+    color: ${theme.colors.secondary};
+  }
+  
+  .invalid {
+    color: ${theme.colors.error};
+  }
+`;
+
 const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onSuccess,
   onLoginClick,
@@ -223,7 +246,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     email: "",
     password: "",
     confirmPassword: "",
-    studentId: "",
     agreeTerms: false,
   });
 
@@ -232,46 +254,57 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const validateField = (
-    name: string,
-    value: string | boolean,
-  ): string | undefined => {
-    switch (name) {
-      case "firstName":
-        if (!value) return "First name is required";
-        if (typeof value === "string" && value.length < 2)
-          return "Name must be at least 2 characters";
-        return undefined;
-      case "lastName":
-        if (!value) return "Last name is required";
-        if (typeof value === "string" && value.length < 2)
-          return "Name must be at least 2 characters";
-        return undefined;
-      case "email":
-        if (!value) return "Email is required";
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value as string))
-          return "Please enter a valid email address";
-        return undefined;
-      case "password":
-        if (!value) return "Password is required";
-        if ((value as string).length < 8)
-          return "Password must be at least 8 characters";
-        return undefined;
-      case "confirmPassword":
-        if (!value) return "Please confirm your password";
-        if (value !== formData.password) return "Passwords do not match";
-        return undefined;
-      case "studentId":
-        if (!value) return "Student ID is required";
-        return undefined;
-      case "agreeTerms":
-        if (!value) return "You must agree to the terms";
-        return undefined;
-      default:
-        return undefined;
-    }
+  // ФУНКЦИЯ ДЛЯ ПРОВЕРКИ ТРЕБОВАНИЙ К ПАРОЛЮ
+  const getPasswordRequirements = (password: string) => {
+    return {
+      minLength: password.length >= 6,
+      hasLetter: /[A-Za-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+    };
   };
+
+  const passwordRequirements = getPasswordRequirements(formData.password);
+
+const validateField = (
+  name: string,
+  value: string | boolean,
+): string | undefined => {
+  switch (name) {
+    case "firstName":
+      if (!value) return "Требуется имя";
+      if (typeof value === "string" && value.length < 2)
+        return "Имя должно содержать не менее 2 символов";
+      return undefined;
+    case "lastName":
+      if (!value) return "Требуется фамилия";
+      if (typeof value === "string" && value.length < 2)
+        return "Фамилия должна содержать не менее 2 символов";
+      return undefined;
+    case "email":
+      if (!value) return "Требуется электронная почта";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value as string))
+        return "Введите корректный email адрес";
+      return undefined;
+    case "password":
+      if (!value) return "Требуется пароль";
+      if (typeof value === "string") {
+        if (value.length < 6) return "Пароль должен содержать не менее 6 символов";
+        if (!/[A-Za-z]/.test(value)) return "Пароль должен содержать хотя бы одну букву";
+        if (!/[0-9]/.test(value)) return "Пароль должен содержать хотя бы одну цифру";
+      }
+      return undefined;
+    case "confirmPassword":
+      if (!value) return "Подтвердите пароль";
+      if (value !== formData.password) return "Пароли не совпадают";
+      return undefined;
+    case "agreeTerms":
+      if (!value) return "Вы должны согласиться с условиями";
+      return undefined;
+    default:
+      return undefined;
+  }
+};
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -310,10 +343,33 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setIsSubmitting(true);
     setSubmitError(null);
 
-    // Simulate API call
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("Registration data:", formData);
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          patronymic: "",
+          email: formData.email,
+          password: formData.password,
+          agreeTerms: formData.agreeTerms
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        if (data.error === 'invalid_password') {
+          setSubmitError("Пароль должен содержать буквы и цифры (минимум 6 символов)");
+        } else if (data.error === 'email_exists') {
+          setSubmitError("Этот email уже зарегистрирован. Пожалуйста, войдите.");
+        } else {
+          throw new Error(data.message);
+        }
+        return;
+      }
+      
       setShowSuccess(true);
       setTimeout(() => {
         onSuccess();
@@ -334,27 +390,27 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       <FormCard>
         <Header>
           <ScoreBadge>
+            <span>Присоединись и получи 100</span>
             <span className="material-symbols-outlined">eco</span>
-            <span>Join & Earn 100</span>
           </ScoreBadge>
           <Logo>
             <LogoIcon>
               <span className="material-symbols-outlined">school</span>
             </LogoIcon>
-            <LogoText>Sheshi</LogoText>
+            <LogoText>Шешка</LogoText>
           </Logo>
-          <Title>Create Account</Title>
-          <Subtitle>Join the Sheshi community and start earning</Subtitle>
+          <Title>Создать аккаунт</Title>
+          <Subtitle>Присоединяйся к нашему университету и обучайся с интерактивом!</Subtitle>
         </Header>
 
         <Form onSubmit={handleSubmit}>
           <Row>
             <FormField
               name="firstName"
-              label="First Name"
+              label="Имя"
               type="text"
               icon="person"
-              placeholder="Enter your first name"
+              placeholder="Введите имя"
               value={formData.firstName}
               error={errors.firstName}
               onChange={handleChange}
@@ -362,10 +418,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
             />
             <FormField
               name="lastName"
-              label="Last Name"
+              label="Фамилия"
               type="text"
               icon="badge"
-              placeholder="Enter your last name"
+              placeholder="Введите фамилию"
               value={formData.lastName}
               error={errors.lastName}
               onChange={handleChange}
@@ -374,23 +430,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
           </Row>
 
           <FormField
-            name="studentId"
-            label="Student ID"
-            type="text"
-            icon="credit_card"
-            placeholder="e.g., SH-2024-XXXX"
-            value={formData.studentId}
-            error={errors.studentId}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
-
-          <FormField
             name="email"
-            label="Email Address"
+            label="Адрес электронной почты"
             type="email"
             icon="mail"
-            placeholder="student@university.edu"
+            placeholder="student@ya.ru"
             value={formData.email}
             error={errors.email}
             onChange={handleChange}
@@ -400,10 +444,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
           <Row>
             <FormField
               name="password"
-              label="Password"
+              label="Пароль"
               type="password"
               icon="lock"
-              placeholder="Create a password"
+              placeholder="Создайте пароль"
               value={formData.password}
               error={errors.password}
               onChange={handleChange}
@@ -411,16 +455,34 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
             />
             <FormField
               name="confirmPassword"
-              label="Confirm Password"
+              label="Подтвердите пароль"
               type="password"
               icon="verified"
-              placeholder="Confirm your password"
+              placeholder="Ваш пароль"
               value={formData.confirmPassword}
               error={errors.confirmPassword}
               onChange={handleChange}
               onBlur={handleBlur}
             />
           </Row>
+
+          {/* ОТОБРАЖЕНИЕ ТРЕБОВАНИЙ К ПАРОЛЮ */}
+          {formData.password && !passwordRequirements.minLength && (
+            <PasswordRequirements>
+              Требования к паролю:
+              <ul>
+                <li className={passwordRequirements.minLength ? "valid" : "invalid"}>
+                  ✓ Не менее 6 символов
+                </li>
+                <li className={passwordRequirements.hasLetter ? "valid" : "invalid"}>
+                  ✓ Содержать хотя бы одну букву (A-Z, a-z)
+                </li>
+                <li className={passwordRequirements.hasNumber ? "valid" : "invalid"}>
+                  ✓ Хотя бы одна цифра (0-9)
+                </li>
+              </ul>
+            </PasswordRequirements>
+          )}
 
           <CheckboxGroup>
             <Checkbox
@@ -430,8 +492,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
               onChange={handleChange}
             />
             <CheckboxLabel>
-              I agree to the <strong>Terms of Service</strong> and{" "}
-              <strong>Privacy Policy</strong>
+              Я согласен с <strong>Условиями пользования</strong> и{" "}
+              <strong>Политикой конфидециальности</strong>
             </CheckboxLabel>
           </CheckboxGroup>
           {errors.agreeTerms && (
@@ -441,10 +503,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
           <SubmitButton type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
-              <>Creating Account...</>
+              <>Шешкуемся!...</>
             ) : (
               <>
-                Create Account
+                Создать аккаунт
                 <span className="material-symbols-outlined">arrow_forward</span>
               </>
             )}
@@ -453,8 +515,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
         <Footer>
           <FooterText>
-            Already have an account?{" "}
-            <LoginLink onClick={onLoginClick}>Sign In</LoginLink>
+            У вас уже есть аккаунт  ?{" "}
+            <LoginLink onClick={onLoginClick}>Войти</LoginLink>
           </FooterText>
         </Footer>
       </FormCard>

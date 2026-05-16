@@ -198,21 +198,23 @@ const LoginForm: React.FC<LoginFormProps> = ({
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {},
-  );
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
 
-    if (!email) newErrors.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      newErrors.email = "Invalid email format";
+    if (!email) {
+      newErrors.email = "Требуется email";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Введите корректный email адрес";
+    }
 
-    if (!password) newErrors.password = "Password is required";
-    else if (password.length < 8)
-      newErrors.password = "Password must be at least 8 characters";
+    if (!password) {
+      newErrors.password = "Требуется пароль";
+    } else if (password.length < 6) {
+      newErrors.password = "Пароль должен содержать не менее 6 символов";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -220,17 +222,27 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
-
+    
     setIsSubmitting(true);
-
+    
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Login:", { email, password });
-      onSuccess();
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        localStorage.setItem('user', JSON.stringify(data.student));
+        onSuccess();
+      } else {
+        setErrors({ email: data.message || "Неверный email или пароль" });
+      }
     } catch (error) {
-      setErrors({ email: "Invalid email or password" });
+      setErrors({ email: 'Ошибка соединения с сервером' });
     } finally {
       setIsSubmitting(false);
     }
@@ -244,19 +256,19 @@ const LoginForm: React.FC<LoginFormProps> = ({
             <LogoIcon>
               <span className="material-symbols-outlined">school</span>
             </LogoIcon>
-            <LogoText>Sheshi</LogoText>
+            <LogoText>Шешка</LogoText>
           </Logo>
-          <Title>Welcome Back</Title>
+          <Title>С возвращением!</Title>
         </Header>
 
         <Form onSubmit={handleSubmit}>
           <FormGroup>
-            <Label>Email Address</Label>
+            <Label>Электронная почта</Label>
             <InputWrapper $hasError={!!errors.email}>
               <span className="material-symbols-outlined">mail</span>
               <input
                 type="email"
-                placeholder="student@university.edu"
+                placeholder="student@ya.ru"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -265,26 +277,26 @@ const LoginForm: React.FC<LoginFormProps> = ({
           </FormGroup>
 
           <FormGroup>
-            <Label>Password</Label>
+            <Label>Пароль</Label>
             <InputWrapper $hasError={!!errors.password}>
               <span className="material-symbols-outlined">lock</span>
               <input
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Введите ваш пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </InputWrapper>
             {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
-            <ForgotPassword>Forgot password?</ForgotPassword>
+            <ForgotPassword>Забыли пароль?</ForgotPassword>
           </FormGroup>
 
           <SubmitButton type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
-              <>Signing In...</>
+              <>Вход...</>
             ) : (
               <>
-                Sign In
+                Войти
                 <span className="material-symbols-outlined">arrow_forward</span>
               </>
             )}
@@ -293,8 +305,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
         <Footer>
           <FooterText>
-            Don't have an account?{" "}
-            <RegisterLink onClick={onRegisterClick}>Sign Up</RegisterLink>
+            Нет аккаунта?{" "}
+            <RegisterLink onClick={onRegisterClick}>Зарегистрироваться</RegisterLink>
           </FooterText>
         </Footer>
       </FormCard>

@@ -63,7 +63,6 @@ def register_student():
         "lastName": "Иванов",
         "patronymic": "Иванович",  // опционально
         "email": "student@university.edu",  // опционально
-        "studentId": "SH-2024-XXXX",  // опционально
         "password": "password123",
         "agreeTerms": true
     }
@@ -138,7 +137,7 @@ def register_student():
             password_hash=hashed_password,
             points=100,  # Новые пользователи получают 100 бонусных баллов (шешей)
             curator=default_curator,
-            student_id=data.get('studentId', '').strip() if data.get('studentId') else None,
+            # student_id=data.get('studentId', '').strip() if data.get('studentId') else None,
             email=email if email else None
         )
         
