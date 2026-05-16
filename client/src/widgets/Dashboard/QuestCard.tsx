@@ -6,6 +6,7 @@ interface QuestCardProps {
   description: string;
   points: number;
   variant?: "primary" | "tertiary";
+  onStart?: () => void;
 }
 
 const Card = styled.div`
@@ -25,7 +26,6 @@ const Inner = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  background-color: transparent;
 `;
 
 const IconBox = styled.div<{ $variant: "primary" | "tertiary" }>`
@@ -42,17 +42,15 @@ const IconBox = styled.div<{ $variant: "primary" | "tertiary" }>`
   flex-shrink: 0;
 `;
 
-const Icon = styled.span.attrs<{ $variant: "primary" | "tertiary" }>(() => ({
+const Icon = styled.span.attrs({
   className: "material-symbols-outlined",
-}))<{ $variant: "primary" | "tertiary" }>`
+})<{ $variant: "primary" | "tertiary" }>`
   font-size: 32px;
   color: ${({ $variant }) => ($variant === "tertiary" ? "#775a00" : "#075fab")};
-  background-color: transparent;
 `;
 
 const Content = styled.div`
   flex-grow: 1;
-  background-color: transparent;
 `;
 
 const Title = styled.h3`
@@ -60,21 +58,18 @@ const Title = styled.h3`
   font-weight: 600;
   color: #191c1e;
   margin-bottom: 4px;
-  background-color: transparent;
 `;
 
 const Description = styled.p`
   font-size: 14px;
   color: #414751;
   margin-bottom: 24px;
-  background-color: transparent;
 `;
 
 const Footer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: transparent;
 `;
 
 const Badge = styled.div`
@@ -92,14 +87,12 @@ const PointsIcon = styled.span.attrs({
   font-size: 16px;
   color: #005314;
   font-variation-settings: "FILL" 1;
-  background-color: transparent;
 `;
 
 const Points = styled.span`
   font-size: 12px;
   font-weight: 500;
   color: #005314;
-  background-color: transparent;
 `;
 
 const Button = styled.button`
@@ -123,6 +116,7 @@ function QuestCard({
   description,
   points,
   variant = "primary",
+  onStart, // 👈 ВОТ ЭТО ТЫ ЗАБЫЛ
 }: QuestCardProps) {
   return (
     <Card>
@@ -130,15 +124,18 @@ function QuestCard({
         <IconBox $variant={variant}>
           <Icon $variant={variant}>{icon}</Icon>
         </IconBox>
+
         <Content>
           <Title>{title}</Title>
           <Description>{description}</Description>
+
           <Footer>
             <Badge>
               <PointsIcon>eco</PointsIcon>
               <Points>+{points} шешей</Points>
             </Badge>
-            <Button>Начать</Button>
+
+            <Button onClick={onStart}>Начать</Button>
           </Footer>
         </Content>
       </Inner>

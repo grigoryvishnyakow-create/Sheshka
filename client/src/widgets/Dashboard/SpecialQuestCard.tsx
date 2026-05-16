@@ -152,7 +152,13 @@ function SpecialQuestCard() {
             <Icon>eco</Icon>
             <Points>+1500 шешей</Points>
           </Badge>
-          <Button>Перейти</Button>
+          <Button
+            onClick={() =>
+              window.open("https://docs.google.com/forms/u/0/", "_blank")
+            }
+          >
+            Перейти
+          </Button>
         </Footer>
       </Content>
     </Card>

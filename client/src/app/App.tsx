@@ -11,7 +11,7 @@ import RegistrationForm from "../widgets/RegistrationForm/RegistrationForm";
 import LoginForm from "../widgets/RegistrationForm/LoginForm";
 import { theme } from "../styles/theme";
 
-type TabId = "dashboard" | "history" | "teachers" | "shop";
+export type TabId = "dashboard" | "history" | "teachers" | "shop";
 type AuthMode = "login" | "register" | "authenticated";
 
 const GlobalStyle = createGlobalStyle`
@@ -48,6 +48,9 @@ function App() {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [balance, setBalance] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const handleNavigate = (tab: TabId) => {
+    setActiveTab(tab);
+  };
 
    // ПРОСТАЯ ПРОВЕРКА - ТОЛЬКО LOCALSTORAGE, БЕЗ ЗАПРОСА К API
   useEffect(() => {
@@ -187,7 +190,9 @@ function App() {
       <div>
         <Header balance={balance} onLogout={handleLogout} />
         <main>
-          {activeTab === "dashboard" && <Dashboard balance={balance} />}
+{activeTab === "dashboard" && (
+            <Dashboard balance={balance} onNavigate={handleNavigate} />
+          )}
           {activeTab === "history" && <History />}
           {activeTab === "teachers" && <TeachersPage />}
           {activeTab === "shop" && <Shop />}

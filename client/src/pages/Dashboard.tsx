@@ -2,9 +2,11 @@ import styled from "styled-components";
 import HeroBalance from "../widgets/Dashboard/HeroBalance";
 import DailyGoal from "../widgets/Dashboard/DailyGoal";
 import QuestsSection from "../widgets/Dashboard/QuestsSection";
+import type { TabId } from "../app/App";
 
 interface DashboardProps {
   balance: number;
+  onNavigate: (tab: TabId) => void;
 }
 
 const Wrapper = styled.div`
@@ -13,15 +15,16 @@ const Wrapper = styled.div`
   margin: 0 auto;
 `;
 
-function Dashboard({ balance }: DashboardProps) {
+function Dashboard({ balance, onNavigate }: DashboardProps) {
   return (
     <Wrapper>
       <HeroBalance balance={balance} />
+
       <DailyGoal
         percent={90}
         hint="Выполните еще одно задание, чтобы достичь своей ежедневной цели!"
       />
-      <QuestsSection />
+      <QuestsSection onNavigate={onNavigate} />
     </Wrapper>
   );
 }
