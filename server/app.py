@@ -290,55 +290,7 @@ def update_student_points(student_id):
             'error': 'server_error',
             'message': f'Ошибка сервера: {str(e)}'
         }), 500
-
-@app.route('/api/student/<int:student_id>/points/add', methods=['POST'])
-def add_points(student_id):
-    """Добавление баллов студенту (за выполнение квестов)"""
-    try:
-        data = request.get_json()
-        
-        if 'points' not in data:
-            return jsonify({
-                'success': False,
-                'error': 'missing_field',
-                'message': 'Поле points обязательно'
-            }), 400
-        
-        student = Student.query.get(student_id)
-        
-        if not student:
-            return jsonify({
-                'success': False,
-                'error': 'not_found',
-                'message': 'Студент не найден'
-            }), 404
-        
-        try:
-            points_to_add = int(data['points'])
-        except ValueError:
-            return jsonify({
-                'success': False,
-                'error': 'invalid_value',
-                'message': 'Points должно быть числом'
-            }), 400
-        
-        student.points += points_to_add
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': f'Добавлено {points_to_add} баллов',
-            'student': student.to_dict()
-        }), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            'success': False,
-            'error': 'server_error',
-            'message': f'Ошибка сервера: {str(e)}'
-        }), 500
-
+    
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
     """Получение топа студентов по баллам"""
@@ -387,6 +339,224 @@ def get_all_students():
             'success': False,
             'error': 'server_error',
             'message': f'Ошибка сервера: {str(e)}'
+        }), 500
+    
+
+@app.route('/api/student/<int:student_id>/add-points', methods=['POST'])
+def add_points(student_id):
+    """НАЧИСЛЕНИЕ ШЕШЕЙ СТУДЕНТУ"""
+    try:
+        data = request.get_json()
+        
+        if 'points' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'missing_field',
+                'message': 'Не указано количество шешей'
+            }), 400
+        
+        student = Student.query.get(student_id)
+        
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': 'not_found',
+                'message': 'Студент не найден'
+            }), 404
+        
+        points_to_add = int(data['points'])
+        
+        if points_to_add <= 0:
+            return jsonify({
+                'success': False,
+                'error': 'invalid_value',
+                'message': 'Количество шешей должно быть положительным'
+            }), 400
+        
+        old_points = student.points
+        student.points += points_to_add
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Начислено {points_to_add} шешей',
+            'old_points': old_points,
+            'new_points': student.points,
+            'student': {
+                'id': student.id,
+                'full_name': student.get_full_name(),
+                'points': student.points,
+                'login': student.login
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/student/<int:student_id>/spend-points', methods=['POST'])
+def spend_points(student_id):
+    """СПИСАНИЕ ШЕШЕЙ СТУДЕНТА (ПРИ ПОКУПКЕ)"""
+    try:
+        data = request.get_json()
+        
+        if 'points' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'missing_field',
+                'message': 'Не указано количество шешей'
+            }), 400
+        
+        student = Student.query.get(student_id)
+        
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': 'not_found',
+                'message': 'Студент не найден'
+            }), 404
+        
+        points_to_spend = int(data['points'])
+        
+        if points_to_spend <= 0:
+            return jsonify({
+                'success': False,
+                'error': 'invalid_value',
+                'message': 'Количество шешей должно быть положительным'
+            }), 400
+        
+        if student.points < points_to_spend:
+            return jsonify({
+                'success': False,
+                'error': 'insufficient_funds',
+                'message': f'Недостаточно шешей. У вас {student.points}, требуется {points_to_spend}',
+                'current_points': student.points
+            }), 400
+        
+        old_points = student.points
+        student.points -= points_to_spend
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Списано {points_to_spend} шешей',
+            'old_points': old_points,
+            'new_points': student.points,
+            'student': {
+                'id': student.id,
+                'full_name': student.get_full_name(),
+                'points': student.points,
+                'login': student.login
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/student/<int:student_id>/points', methods=['GET'])
+def get_points(student_id):
+    """ПОЛУЧИТЬ ТЕКУЩЕЕ КОЛИЧЕСТВО ШЕШЕЙ СТУДЕНТА"""
+    try:
+        student = Student.query.get(student_id)
+        
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': 'not_found',
+                'message': 'Студент не найден'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'points': student.points,
+            'student': {
+                'id': student.id,
+                'full_name': student.get_full_name(),
+                'points': student.points,
+                'login': student.login
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
+    
+@app.route('/api/student/<int:student_id>/balance', methods=['GET'])
+def get_student_balance(student_id):
+    """ПОЛУЧЕНИЕ БАЛАНСА СТУДЕНТА ДЛЯ HEADER"""
+    try:
+        student = Student.query.get(student_id)
+        
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': 'not_found',
+                'message': 'Студент не найден'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'points': student.points,
+            'student': {
+                'id': student.id,
+                'full_name': student.get_full_name(),
+                'points': student.points
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/student/<int:student_id>/dashboard', methods=['GET'])
+def get_student_dashboard(student_id):
+    """ПОЛУЧЕНИЕ ДАННЫХ ДЛЯ ГЛАВНОЙ СТРАНИЦЫ (ДАШБОРД)"""
+    try:
+        student = Student.query.get(student_id)
+        
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': 'not_found',
+                'message': 'Студент не найден'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'points': student.points,
+            'student': {
+                'id': student.id,
+                'full_name': student.get_full_name(),
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'points': student.points,
+                'login': student.login
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
         }), 500
 
 if __name__ == '__main__':

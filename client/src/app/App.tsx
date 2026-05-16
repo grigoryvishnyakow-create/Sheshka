@@ -1,5 +1,5 @@
 // App.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
 import BottomNavBar from "../widgets/NavMenu";
 import TeachersPage from "../pages/TeachersPage";
@@ -47,25 +47,92 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [balance, setBalance] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+
+   // ПРОСТАЯ ПРОВЕРКА - ТОЛЬКО LOCALSTORAGE, БЕЗ ЗАПРОСА К API
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        setCurrentUserId(user.id);
+        setBalance(user.points || 100);
+        setAuthMode("authenticated");
+      } catch (error) {
+        console.error("Ошибка парсинга user:", error);
+        localStorage.removeItem('user');
+      }
+    }
+  }, []);
+
+  // ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ БАЛАНСА ИЗ БД
+  const loadBalanceFromDB = async (userId: number) => {
+    try {
+      const response = await fetch(`/api/student/${userId}/balance`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setBalance(data.points);
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки баланса:", error);
+    }
+  };
+
+  // ПРИ ВХОДЕ - ЗАГРУЖАЕМ БАЛАНС ИЗ БД
+  const handleLoginSuccess = async () => {
+    const savedUser = localStorage.getItem('user');
+    
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      setCurrentUserId(user.id);
+      await loadBalanceFromDB(user.id);
+      setAuthMode("authenticated");
+    } else {
+      setAuthMode("authenticated");
+    }
+  };
+
+  // ПРИ РЕГИСТРАЦИИ - БАЛАНС 100 УЖЕ В БД (БЕКЕНД УСТАНАВЛИВАЕТ 100)
+  const handleRegisterSuccess = async () => {
+    const savedUser = localStorage.getItem('user');
+    
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      setCurrentUserId(user.id);
+      setBalance(100); // ВРЕМЕННО ПОКАЗЫВАЕМ 100, ПОТОМ ПОДТВЕРДИМ ИЗ БД
+      await loadBalanceFromDB(user.id); // ПОДТВЕРЖДАЕМ РЕАЛЬНЫЙ БАЛАНС ИЗ БД
+      setAuthMode("authenticated");
+    } else {
+      setAuthMode("authenticated");
+      setBalance(100);
+    }
+  };
+
+  // ПРИ ВЫХОДЕ - ОЧИЩАЕМ
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setAuthMode("login");
+    setBalance(0);
+    setCurrentUserId(null);
+  };
+
+  // ПРИ ЗАГРУЗКЕ АУТЕНТИФИЦИРОВАННОГО СОСТОЯНИЯ - ЗАГРУЖАЕМ БАЛАНС
+  useEffect(() => {
+    if (authMode === "authenticated") {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        setCurrentUserId(user.id);
+        loadBalanceFromDB(user.id);
+      }
+    }
+  }, [authMode]);
 
   const handleTabChange = (tabId: string) => {
     console.log("TAB:", tabId);
     setActiveTab(tabId as TabId);
-  };
-
-  const handleLoginSuccess = () => {
-    setAuthMode("authenticated");
-    setBalance(100); // Set initial balance after login
-  };
-
-  const handleRegisterSuccess = () => {
-    setAuthMode("authenticated");
-    setBalance(100); // New users get 100 bonus points
-  };
-
-  const handleLogout = () => {
-    setAuthMode("login");
-    setBalance(0);
   };
 
   const handleShowRegister = () => {
