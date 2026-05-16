@@ -47,6 +47,8 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [balance, setBalance] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null); // ADD THIS STATE
+
   const handleNavigate = (tab: TabId) => {
     setActiveTab(tab);
   };
@@ -59,6 +61,7 @@ function App() {
       try {
         const user = JSON.parse(savedUser);
         setBalance(user.points || 100);
+        setCurrentUserId(user.id); // SET THE USER ID
         setAuthMode("authenticated");
       } catch (error) {
         console.error("Ошибка парсинга user:", error);
@@ -87,6 +90,7 @@ function App() {
 
     if (savedUser) {
       const user = JSON.parse(savedUser);
+      setCurrentUserId(user.id); // SET THE USER ID
       await loadBalanceFromDB(user.id);
       setAuthMode("authenticated");
     } else {
@@ -100,6 +104,7 @@ function App() {
 
     if (savedUser) {
       const user = JSON.parse(savedUser);
+      setCurrentUserId(user.id); // SET THE USER ID
       setBalance(100); // ВРЕМЕННО ПОКАЗЫВАЕМ 100, ПОТОМ ПОДТВЕРДИМ ИЗ БД
       await loadBalanceFromDB(user.id); // ПОДТВЕРЖДАЕМ РЕАЛЬНЫЙ БАЛАНС ИЗ БД
       setAuthMode("authenticated");
@@ -112,6 +117,7 @@ function App() {
   // ПРИ ВЫХОДЕ - ОЧИЩАЕМ
   const handleLogout = () => {
     localStorage.removeItem("user");
+    setCurrentUserId(null); // CLEAR THE USER ID
     setAuthMode("login");
     setBalance(0);
   };
@@ -122,6 +128,7 @@ function App() {
       const savedUser = localStorage.getItem("user");
       if (savedUser) {
         const user = JSON.parse(savedUser);
+        setCurrentUserId(user.id); // SET THE USER ID
         loadBalanceFromDB(user.id);
       }
     }
@@ -173,6 +180,11 @@ function App() {
     );
   }
 
+  // Handle case when currentUserId is null (loading state)
+  if (currentUserId === null) {
+    return null; // Or a loading spinner
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyle />
@@ -186,7 +198,7 @@ function App() {
           {activeTab === "dashboard" && (
             <Dashboard
               balance={balance}
-              studentId={currentUserId!}
+              studentId={currentUserId}
               onNavigate={handleNavigate}
               onBalanceUpdate={setBalance}
             />

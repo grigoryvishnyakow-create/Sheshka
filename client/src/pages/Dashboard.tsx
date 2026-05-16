@@ -5,7 +5,7 @@ import HeroBalance from "../widgets/Dashboard/HeroBalance";
 import DailyGoal from "../widgets/Dashboard/DailyGoal";
 import QuestsSection from "../widgets/Dashboard/QuestsSection";
 import type { TabId } from "../app/App";
-import { api } from "../services/api";
+import { api } from "../api/config";
 
 interface DashboardProps {
   balance: number;
