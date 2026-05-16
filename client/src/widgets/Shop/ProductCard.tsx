@@ -1,7 +1,7 @@
 // components/ProductCard.tsx
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import type { Product } from "./ProductGrid";
+
 
 const Card = styled.div`
   display: flex;
@@ -88,13 +88,58 @@ const PriceValue = styled.span`
   color: #004784;
 `;
 
-interface ProductCardProps {
-  product: Product;
+interface Product {
+  id: number;
+  title: string;
+  price: number;
+  category: string;
+  image: string;
+  alt: string;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const handleBuy = () => {
-    alert(`Added ${product.title} to cart!`);
+interface ProductCardProps {
+  product: Product;
+  studentId: number;
+  onBalanceUpdate?: (newBalance: number) => void;
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({ product, studentId, onBalanceUpdate }) => {
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const handleBuy = async () => {
+    if (isPurchasing) return;
+    
+    setIsPurchasing(true);
+    
+    try {
+      const response = await fetch(`/api/student/${studentId}/spend-points`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ points: product.price })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // ОБНОВЛЯЕМ LOCALSTORAGE
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          const user = JSON.parse(savedUser);
+          user.points = data.new_points;
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+        
+        alert(`✅ ${product.title} куплен! Списано ${product.price} шешей`);
+        onBalanceUpdate?.(data.new_points);
+      } else {
+        alert(data.message || "Недостаточно шешей для покупки");
+      }
+    } catch (error) {
+      console.error("Purchase error:", error);
+      alert("Ошибка соединения с сервером");
+    } finally {
+      setIsPurchasing(false);
+    }
   };
 
   return (
@@ -108,7 +153,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <PriceValue>{product.price}</PriceValue>
           <Icon>eco</Icon>
         </PriceWrapper>
-        <BuyButton onClick={handleBuy}>Купить</BuyButton>
+        <BuyButton onClick={handleBuy} disabled={isPurchasing}>
+          {isPurchasing ? "Обработка..." : "Купить"}
+        </BuyButton>
       </ProductInfo>
     </Card>
   );

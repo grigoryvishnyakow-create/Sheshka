@@ -55,9 +55,15 @@ const products: Product[] = [
 
 interface ProductGridProps {
   activeCategory: string;
+  studentId: number;
+  onBalanceUpdate?: (newBalance: number) => void;
 }
 
-const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
+const ProductGrid: React.FC<ProductGridProps> = ({ 
+  activeCategory, 
+  studentId, 
+  onBalanceUpdate 
+}) => {
   const filteredProducts = products.filter(product => {
     if (activeCategory === 'All Items' || activeCategory === 'Всё') {
       return true;
@@ -68,7 +74,12 @@ const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
   return (
     <Grid>
       {filteredProducts.map(product => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard 
+          key={product.id} 
+          product={product}
+          studentId={studentId}
+          onBalanceUpdate={onBalanceUpdate}
+        />
       ))}
     </Grid>
   );

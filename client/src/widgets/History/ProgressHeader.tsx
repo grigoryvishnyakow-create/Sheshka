@@ -1,5 +1,10 @@
+// widgets/History/ProgressHeader.tsx
 import React from "react";
 import styled from "styled-components";
+
+interface ProgressHeaderProps {
+  progressPercent?: number;
+}
 
 const Wrapper = styled.section`
   margin-bottom: 48px;
@@ -36,14 +41,15 @@ const ProgressBar = styled.div`
   border-radius: 999px;
 `;
 
-const Progress = styled.div`
+const Progress = styled.div<{ $percent: number }>`
   height: 100%;
-  width: 75%;
+  width: ${({ $percent }) => $percent}%;
   background: #006e1d;
   border-radius: 999px;
+  transition: width 0.3s ease;
 `;
 
-const ProgressHeader: React.FC = () => {
+const ProgressHeader: React.FC<ProgressHeaderProps> = ({ progressPercent = 0 }) => {
   return (
     <Wrapper>
       <Top>
@@ -52,11 +58,11 @@ const ProgressHeader: React.FC = () => {
           <Subtitle>Тур «Архитектура и наследие»</Subtitle>
         </div>
 
-        <Badge>75% Завершено</Badge>
+        <Badge>{progressPercent}% Завершено</Badge>
       </Top>
 
       <ProgressBar>
-        <Progress />
+        <Progress $percent={progressPercent} />
       </ProgressBar>
     </Wrapper>
   );

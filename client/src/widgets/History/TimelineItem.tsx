@@ -9,6 +9,7 @@ interface Props {
   year?: string;
   overlay?: boolean;
   locked?: boolean;
+  isCompleted?: boolean;
 }
 
 const Row = styled.div`
@@ -16,16 +17,17 @@ const Row = styled.div`
   gap: 24px;
 `;
 
-const Icon = styled.div`
+const Icon = styled.div<{ $completed?: boolean }>`
   z-index: 10;
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #075fab;
+  background: ${({ $completed }) => ($completed ? "#006e1d" : "#075fab")};
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.2s;
 `;
 
 const Card = styled.div`
@@ -34,8 +36,8 @@ const Card = styled.div`
   padding: 24px;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-
   transition: transform 0.2s;
+  
   &:hover {
     transform: translateY(-4px);
   }
@@ -57,6 +59,25 @@ const Year = styled.span`
   font-weight: bold;
 `;
 
+const CompletedBadge = styled.div`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #006e1d;
+  color: white;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  
+  span {
+    font-size: 14px;
+  }
+`;
+
 const Locked = styled.div`
   text-align: center;
   padding: 40px;
@@ -65,10 +86,13 @@ const Locked = styled.div`
 
 const Title = styled.h3`
   margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 600;
 `;
 
 const Text = styled.p`
   color: #727782;
+  font-size: 14px;
 `;
 
 const TimelineItem: React.FC<Props> = ({
@@ -78,10 +102,13 @@ const TimelineItem: React.FC<Props> = ({
   image,
   year,
   locked,
+  isCompleted,
 }) => {
   return (
     <Row>
-      <Icon>{icon}</Icon>
+      <Icon $completed={isCompleted}>
+        {isCompleted ? "✓" : icon}
+      </Icon>
 
       <Card>
         {locked ? (
@@ -91,7 +118,19 @@ const TimelineItem: React.FC<Props> = ({
           </Locked>
         ) : (
           <>
-            {image && <Image src={image}>{year && <Year>{year}</Year>}</Image>}
+            {image && (
+              <Image src={image}>
+                {year && <Year>{year}</Year>}
+                {isCompleted && (
+                  <CompletedBadge>
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+                      check_circle
+                    </span>
+                    Пройдено
+                  </CompletedBadge>
+                )}
+              </Image>
+            )}
 
             <Title>{title}</Title>
             <Text>{text}</Text>

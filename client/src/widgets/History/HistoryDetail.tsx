@@ -1,10 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import type { HistoryEntryData } from "../../pages/History";
+
+export interface HistoryEntryData {
+  id: string;
+  icon: string;
+  title: string;
+  text: string;
+  fullText?: string;
+  image?: string;
+  year?: string;
+  overlay?: boolean;
+  locked?: boolean;
+  badges?: string[];
+}
 
 interface Props {
   entry: HistoryEntryData;
+  studentId: number;
   onBack: () => void;
+  onPointsEarned?: (points: number, newBalance: number) => void;
 }
 
 const Wrapper = styled.div`
@@ -124,7 +138,7 @@ const StatLabel = styled.div`
   margin-top: 4px;
 `;
 
-// Кнопка начала теста
+
 const TestButton = styled.button`
   display: flex;
   align-items: center;
@@ -146,9 +160,14 @@ const TestButton = styled.button`
   &:hover {
     opacity: 0.9;
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
-// ========== Компоненты теста ==========
+
 
 const QuizOverlay = styled.div`
   position: fixed;
@@ -228,6 +247,11 @@ const OptionButton = styled.button<{
     border-color: #075fab;
     background: rgba(7, 95, 171, 0.03);
   }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 `;
 
 const QuizFeedback = styled.div<{ correct: boolean }>`
@@ -265,7 +289,12 @@ const CloseQuizButton = styled.button`
   cursor: pointer;
 `;
 
-// ========== Данные для тестов (можно вынести в отдельный файл) ==========
+const ErrorMessage = styled.div`
+  color: #ba1a1a;
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+`;
 
 const quizData: Record<
   string,
@@ -289,35 +318,91 @@ const quizData: Record<
   },
 };
 
-const HistoryDetail: React.FC<Props> = ({ entry, onBack }) => {
-  // Состояния теста
+const HistoryDetail: React.FC<Props> = ({ entry, studentId, onBack, onPointsEarned }) => {
   const [quizActive, setQuizActive] = useState(false);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
   const [rewardCollected, setRewardCollected] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const quiz = quizData[entry.id] || quizData.default;
   const isCorrect = selectedOption === quiz.correctIndex;
+  const rewardPoints = 20;
+
+  // ПРОВЕРКА ВЫПОЛНЕН ЛИ ТЕСТ
+  useEffect(() => {
+    const checkQuestStatus = async () => {
+      try {
+        const response = await fetch(`/api/student/${studentId}/completed-quests`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const questCompleted = data.completed_quests.some(
+            (q: any) => q.quest_id === entry.id
+          );
+          setRewardCollected(questCompleted);
+        }
+      } catch (error) {
+        console.error("Ошибка проверки статуса квеста:", error);
+      }
+    };
+    
+    checkQuestStatus();
+  }, [studentId, entry.id]);
 
   const handleOpenQuiz = () => {
     setQuizActive(true);
     setSelectedOption(null);
     setAnswered(false);
+    setError(null);
   };
 
   const handleSelectOption = (index: number) => {
-    if (!answered) {
+    if (!answered && !rewardCollected) {
       setSelectedOption(index);
     }
   };
 
-  const handleCheckAnswer = () => {
-    if (selectedOption !== null) {
+  const handleCheckAnswer = async () => {
+    if (selectedOption !== null && !rewardCollected) {
       setAnswered(true);
+      
       if (isCorrect) {
-        setRewardCollected(true);
-        // Здесь можно вызвать колбэк для начисления баллов
-        // onReward(20);
+        setIsProcessing(true);
+        
+        try {
+          const response = await fetch(`/api/student/${studentId}/complete-quest`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              quest_id: entry.id,
+              quest_title: entry.title,
+              points: rewardPoints
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            setRewardCollected(true);
+            onPointsEarned?.(rewardPoints, data.new_points);
+            
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) {
+              const user = JSON.parse(savedUser);
+              user.points = data.new_points;
+              localStorage.setItem('user', JSON.stringify(user));
+            }
+          } else {
+            setError(data.message || "Не удалось получить награду");
+          }
+        } catch (error) {
+          console.error("Ошибка при выполнении квеста:", error);
+          setError("Ошибка соединения с сервером");
+        } finally {
+          setIsProcessing(false);
+        }
       }
     }
   };
@@ -333,20 +418,17 @@ const HistoryDetail: React.FC<Props> = ({ entry, onBack }) => {
         Назад к туру
       </BackButton>
 
-      {/* Изображение */}
+
       {entry.image && <HeroImage src={entry.image} />}
 
-      {/* Контент */}
+
       <Content>
-        {/* Бейджи */}
+
         {entry.badges && (
           <Badges>
             {entry.badges.map((badge) => (
               <Badge key={badge}>
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: 18 }}
-                >
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                   verified_user
                 </span>
                 {badge}
@@ -362,7 +444,7 @@ const HistoryDetail: React.FC<Props> = ({ entry, onBack }) => {
           <p>{entry.fullText || entry.text}</p>
         </Text>
 
-        {/* Статистика */}
+
         <StatsGrid>
           <StatCard>
             <StatValue>{entry.year}</StatValue>
@@ -374,15 +456,15 @@ const HistoryDetail: React.FC<Props> = ({ entry, onBack }) => {
           </StatCard>
         </StatsGrid>
 
-        {/* Кнопка теста */}
+
         {!rewardCollected && (
-          <TestButton onClick={handleOpenQuiz}>
+          <TestButton onClick={handleOpenQuiz} disabled={isProcessing}>
             <span className="material-symbols-outlined">quiz</span>
-            Ответить на вопрос и получить баллы
+            {isProcessing ? "Обработка..." : "Ответить на вопрос и получить баллы"}
           </TestButton>
         )}
 
-        {/* Бейдж о полученной награде */}
+
         {rewardCollected && (
           <TestButton
             as="div"
@@ -393,12 +475,14 @@ const HistoryDetail: React.FC<Props> = ({ entry, onBack }) => {
             }}
           >
             <span className="material-symbols-outlined">check_circle</span>
-            Награда получена! +20 🌱
+            Награда получена! +{rewardPoints} 🌱
           </TestButton>
         )}
+
+        {error && <ErrorMessage>{error}</ErrorMessage>}
       </Content>
 
-      {/* Модальное окно с тестом */}
+  
       {quizActive && (
         <QuizOverlay onClick={handleCloseQuiz}>
           <QuizCard onClick={(e) => e.stopPropagation()}>
@@ -416,21 +500,21 @@ const HistoryDetail: React.FC<Props> = ({ entry, onBack }) => {
                     index !== quiz.correctIndex
                   }
                   onClick={() => handleSelectOption(index)}
-                  disabled={answered}
+                  disabled={answered || rewardCollected}
                 >
                   {option}
                 </OptionButton>
               ))}
             </OptionList>
 
-            {!answered && (
+            {!answered && !rewardCollected && (
               <TestButton
                 onClick={handleCheckAnswer}
-                disabled={selectedOption === null}
+                disabled={selectedOption === null || isProcessing}
                 style={{
                   marginTop: 20,
                   opacity: selectedOption === null ? 0.5 : 1,
-                  cursor: selectedOption === null ? "default" : "pointer",
+   
                 }}
               >
                 Проверить
@@ -447,7 +531,7 @@ const HistoryDetail: React.FC<Props> = ({ entry, onBack }) => {
 
                 {isCorrect && !rewardCollected && (
                   <RewardDisplay>
-                    <span>🌱</span> +20 баллов
+                    <span>🌱</span> +{rewardPoints} баллов
                   </RewardDisplay>
                 )}
 

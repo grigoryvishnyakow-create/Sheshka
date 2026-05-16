@@ -47,7 +47,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [balance, setBalance] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null); // ADD THIS STATE
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const handleNavigate = (tab: TabId) => {
     setActiveTab(tab);
@@ -61,7 +61,7 @@ function App() {
       try {
         const user = JSON.parse(savedUser);
         setBalance(user.points || 100);
-        setCurrentUserId(user.id); // SET THE USER ID
+        setCurrentUserId(user.id);
         setAuthMode("authenticated");
       } catch (error) {
         console.error("Ошибка парсинга user:", error);
@@ -84,13 +84,24 @@ function App() {
     }
   };
 
+  // ОБНОВЛЕНИЕ БАЛАНСА ПОСЛЕ ПОКУПКИ ИЛИ КВЕСТА
+  const updateBalance = (newBalance: number) => {
+    setBalance(newBalance);
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      user.points = newBalance;
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+  };
+
   // ПРИ ВХОДЕ - ЗАГРУЖАЕМ БАЛАНС ИЗ БД
   const handleLoginSuccess = async () => {
     const savedUser = localStorage.getItem("user");
 
     if (savedUser) {
       const user = JSON.parse(savedUser);
-      setCurrentUserId(user.id); // SET THE USER ID
+      setCurrentUserId(user.id);
       await loadBalanceFromDB(user.id);
       setAuthMode("authenticated");
     } else {
@@ -104,9 +115,9 @@ function App() {
 
     if (savedUser) {
       const user = JSON.parse(savedUser);
-      setCurrentUserId(user.id); // SET THE USER ID
-      setBalance(100); // ВРЕМЕННО ПОКАЗЫВАЕМ 100, ПОТОМ ПОДТВЕРДИМ ИЗ БД
-      await loadBalanceFromDB(user.id); // ПОДТВЕРЖДАЕМ РЕАЛЬНЫЙ БАЛАНС ИЗ БД
+      setCurrentUserId(user.id);
+      setBalance(100);
+      await loadBalanceFromDB(user.id);
       setAuthMode("authenticated");
     } else {
       setAuthMode("authenticated");
@@ -117,7 +128,7 @@ function App() {
   // ПРИ ВЫХОДЕ - ОЧИЩАЕМ
   const handleLogout = () => {
     localStorage.removeItem("user");
-    setCurrentUserId(null); // CLEAR THE USER ID
+    setCurrentUserId(null);
     setAuthMode("login");
     setBalance(0);
   };
@@ -128,7 +139,7 @@ function App() {
       const savedUser = localStorage.getItem("user");
       if (savedUser) {
         const user = JSON.parse(savedUser);
-        setCurrentUserId(user.id); // SET THE USER ID
+        setCurrentUserId(user.id);
         loadBalanceFromDB(user.id);
       }
     }
@@ -182,7 +193,7 @@ function App() {
 
   // Handle case when currentUserId is null (loading state)
   if (currentUserId === null) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return (
@@ -200,12 +211,22 @@ function App() {
               balance={balance}
               studentId={currentUserId}
               onNavigate={handleNavigate}
-              onBalanceUpdate={setBalance}
+              onBalanceUpdate={updateBalance}
             />
           )}
-          {activeTab === "history" && <History />}
+          {activeTab === "history" && (
+            <History
+              studentId={currentUserId}
+              onBalanceUpdate={updateBalance}
+            />
+          )}
           {activeTab === "teachers" && <TeachersPage />}
-          {activeTab === "shop" && <Shop />}
+          {activeTab === "shop" && (
+            <Shop
+              studentId={currentUserId}
+              onBalanceUpdate={updateBalance}
+            />
+          )}
         </main>
         <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />
       </div>

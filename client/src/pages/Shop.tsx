@@ -18,6 +18,11 @@ const PageContainer = styled.main`
   min-height: 100vh;
 `;
 
+interface ShopProps {
+  studentId: number;
+  onBalanceUpdate?: (newBalance: number) => void;
+}
+
 const Section = styled.section`
   margin-bottom: 3rem;
 `;

@@ -1,16 +1,10 @@
-import React, { useState } from "react";
+// pages/History.tsx
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import ProgressHeader from "../widgets/History/ProgressHeader";
 import Timeline from "../widgets/History/Timeline";
 import HistoryDetail from "../widgets/History/HistoryDetail";
 
-const Container = styled.main`
-  padding: 80px 16px 120px;
-  max-width: 1200px;
-  margin: 0 auto;
-`;
-
-// Тип для элемента истории
 export interface HistoryEntryData {
   id: string;
   icon: string;
@@ -24,9 +18,53 @@ export interface HistoryEntryData {
   badges?: string[];
 }
 
-const HistoryPage: React.FC = () => {
-  const [selectedHistory, setSelectedHistory] =
-    useState<HistoryEntryData | null>(null);
+const Container = styled.main`
+  padding: 80px 16px 120px;
+  max-width: 1200px;
+  margin: 0 auto;
+`;
+
+interface HistoryPageProps {
+  studentId: number;
+  onBalanceUpdate?: (newBalance: number) => void;
+  onProgressUpdate?: (percent: number) => void;
+}
+
+const HistoryPage: React.FC<HistoryPageProps> = ({ 
+  studentId, 
+  onBalanceUpdate,
+  onProgressUpdate 
+}) => {
+  const [selectedHistory, setSelectedHistory] = useState<HistoryEntryData | null>(null);
+  const [completedQuests, setCompletedQuests] = useState<string[]>([]);
+  const [progressPercent, setProgressPercent] = useState(0);
+
+  // ЗАГРУЖАЕМ СПИСОК ВЫПОЛНЕННЫХ КВЕСТОВ ПРИ ЗАГРУЗКЕ
+  useEffect(() => {
+    const loadCompletedQuests = async () => {
+      try {
+        const response = await fetch(`/api/student/${studentId}/completed-quests`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const questIds = data.completed_quests.map((q: any) => q.quest_id);
+          setCompletedQuests(questIds);
+          
+          // ВЫЧИСЛЯЕМ ПРОГРЕСС (ВСЕГО 3 НЕЗАЛОКАННЫХ КВЕСТА)
+          const totalQuests = 2; // foundation и main-hall
+          const percent = Math.round((questIds.length / totalQuests) * 100);
+          setProgressPercent(Math.min(100, percent));
+          onProgressUpdate?.(Math.min(100, percent));
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки выполненных квестов:", error);
+      }
+    };
+    
+    if (studentId) {
+      loadCompletedQuests();
+    }
+  }, [studentId]);
 
   const handleHistoryClick = (entry: HistoryEntryData) => {
     if (!entry.locked) {
@@ -38,11 +76,35 @@ const HistoryPage: React.FC = () => {
     setSelectedHistory(null);
   };
 
+  const handlePointsEarned = async (_points: number, newBalance: number) => {
+    // ОБНОВЛЯЕМ СПИСОК ВЫПОЛНЕННЫХ КВЕСТОВ
+    const response = await fetch(`/api/student/${studentId}/completed-quests`);
+    const data = await response.json();
+    
+    if (data.success) {
+      const questIds = data.completed_quests.map((q: any) => q.quest_id);
+      setCompletedQuests(questIds);
+      
+      // ОБНОВЛЯЕМ ПРОГРЕСС
+      const totalQuests = 2;
+      const percent = Math.round((questIds.length / totalQuests) * 100);
+      setProgressPercent(Math.min(100, percent));
+      onProgressUpdate?.(Math.min(100, percent));
+    }
+    
+    onBalanceUpdate?.(newBalance);
+  };
+
   // Если выбрана конкретная история — показываем детальную страницу
   if (selectedHistory) {
     return (
       <Container>
-        <HistoryDetail entry={selectedHistory} onBack={handleBack} />
+        <HistoryDetail 
+          entry={selectedHistory} 
+          studentId={studentId}
+          onBack={handleBack}
+          onPointsEarned={handlePointsEarned}
+        />
       </Container>
     );
   }
@@ -50,8 +112,11 @@ const HistoryPage: React.FC = () => {
   // Иначе показываем список с таймлайном
   return (
     <Container>
-      <ProgressHeader />
-      <Timeline onItemClick={handleHistoryClick} />
+      <ProgressHeader progressPercent={progressPercent} />
+      <Timeline 
+        onItemClick={handleHistoryClick} 
+        completedQuests={completedQuests}
+      />
     </Container>
   );
 };
