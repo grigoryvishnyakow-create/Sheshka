@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
-from models import db, Student
 from config import Config
 import re
+from models import db, Student, CompletedQuest
+from datetime import datetime
 
 # Инициализация приложения
 app = Flask(__name__)
@@ -550,6 +551,156 @@ def get_student_dashboard(student_id):
                 'points': student.points,
                 'login': student.login
             }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
+
+# ============= ЭНДПОИНТЫ ДЛЯ КВЕСТОВ И ЕЖЕДНЕВНОЙ ЦЕЛИ =============
+
+@app.route('/api/student/<int:student_id>/complete-quest', methods=['POST'])
+def complete_quest(student_id):
+    """ВЫПОЛНЕНИЕ КВЕСТА - НАЧИСЛЯЕТ ШЕШИ И СОХРАНЯЕТ В ИСТОРИЮ"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('quest_id') or not data.get('points'):
+            return jsonify({
+                'success': False,
+                'error': 'missing_fields',
+                'message': 'Требуются quest_id и points'
+            }), 400
+        
+        student = Student.query.get(student_id)
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': 'not_found',
+                'message': 'Студент не найден'
+            }), 404
+        
+        # ПРОВЕРКА - НЕ ВЫПОЛНЕН ЛИ КВЕСТ РАНЕЕ
+        existing = CompletedQuest.query.filter_by(
+            student_id=student_id, 
+            quest_id=data['quest_id']
+        ).first()
+        
+        if existing:
+            return jsonify({
+                'success': False,
+                'error': 'quest_already_completed',
+                'message': 'Этот квест уже выполнен'
+            }), 400
+        
+        # НАЧИСЛЯЕМ ШЕШИ
+        points_to_add = int(data['points'])
+        old_points = student.points
+        student.points += points_to_add
+        
+        # СОХРАНЯЕМ ВЫПОЛНЕННЫЙ КВЕСТ
+        new_quest = CompletedQuest(
+            student_id=student_id,
+            quest_id=data['quest_id'],
+            quest_title=data.get('quest_title', ''),
+            points_earned=points_to_add
+        )
+        
+        db.session.add(new_quest)
+        db.session.commit()
+        
+        # ПЕРЕСЧИТЫВАЕМ ПРОГРЕСС ЕЖЕДНЕВНОЙ ЦЕЛИ
+        daily_progress = get_daily_progress(student_id)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Квест выполнен! Получено {points_to_add} шешей',
+            'added_points': points_to_add,
+            'new_points': student.points,
+            'daily_progress': daily_progress,
+            'student': student.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
+
+
+def get_daily_progress(student_id):
+    """ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ - ПОДСЧЕТ ВЫПОЛНЕННЫХ КВЕСТОВ ЗА СЕГОДНЯ"""
+    today = datetime.utcnow().date()
+    today_start = datetime(today.year, today.month, today.day)
+    
+    completed_today = CompletedQuest.query.filter(
+        CompletedQuest.student_id == student_id,
+        CompletedQuest.completed_at >= today_start
+    ).count()
+    
+    # ЦЕЛЬ НА СЕГОДНЯ - 3 КВЕСТА
+    target = 3
+    percent = min(100, int((completed_today / target) * 100))
+    
+    return {
+        'completed_today': completed_today,
+        'target': target,
+        'percent': percent,
+        'remaining': max(0, target - completed_today)
+    }
+
+
+@app.route('/api/student/<int:student_id>/daily-progress', methods=['GET'])
+def get_daily_goal_progress(student_id):
+    """ПОЛУЧЕНИЕ ПРОГРЕССА ЕЖЕДНЕВНОЙ ЦЕЛИ"""
+    try:
+        student = Student.query.get(student_id)
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': 'not_found',
+                'message': 'Студент не найден'
+            }), 404
+        
+        daily_progress = get_daily_progress(student_id)
+        
+        return jsonify({
+            'success': True,
+            'daily_progress': daily_progress,
+            'points': student.points
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/student/<int:student_id>/completed-quests', methods=['GET'])
+def get_completed_quests(student_id):
+    """ПОЛУЧЕНИЕ СПИСКА ВЫПОЛНЕННЫХ КВЕСТОВ"""
+    try:
+        completed = CompletedQuest.query.filter_by(student_id=student_id).order_by(
+            CompletedQuest.completed_at.desc()
+        ).all()
+        
+        return jsonify({
+            'success': True,
+            'completed_quests': [{
+                'id': q.id,
+                'quest_id': q.quest_id,
+                'quest_title': q.quest_title,
+                'points_earned': q.points_earned,
+                'completed_at': q.completed_at.isoformat()
+            } for q in completed],
+            'total_count': len(completed)
         }), 200
         
     except Exception as e:

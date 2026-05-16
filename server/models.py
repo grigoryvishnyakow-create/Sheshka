@@ -45,3 +45,20 @@ class Student(db.Model):
     
     def __repr__(self):
         return f'<Student {self.login}>'
+    
+class CompletedQuest(db.Model):
+    __tablename__ = 'completed_quests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    quest_id = db.Column(db.String(100), nullable=False)  # УНИКАЛЬНЫЙ ID КВЕСТА
+    quest_title = db.Column(db.String(200), nullable=False)
+    points_earned = db.Column(db.Integer, default=0)
+    completed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # СВЯЗЬ СО СТУДЕНТОМ
+    student = db.relationship('Student', backref=db.backref('completed_quests', lazy=True))
+    
+    __table_args__ = (
+        db.UniqueConstraint('student_id', 'quest_id', name='unique_student_quest'),
+    )
