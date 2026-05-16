@@ -47,7 +47,6 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [balance, setBalance] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const handleNavigate = (tab: TabId) => {
     setActiveTab(tab);
   };
@@ -59,7 +58,6 @@ function App() {
     if (savedUser) {
       try {
         const user = JSON.parse(savedUser);
-        setCurrentUserId(user.id);
         setBalance(user.points || 100);
         setAuthMode("authenticated");
       } catch (error) {
@@ -89,7 +87,6 @@ function App() {
     
     if (savedUser) {
       const user = JSON.parse(savedUser);
-      setCurrentUserId(user.id);
       await loadBalanceFromDB(user.id);
       setAuthMode("authenticated");
     } else {
@@ -103,7 +100,6 @@ function App() {
     
     if (savedUser) {
       const user = JSON.parse(savedUser);
-      setCurrentUserId(user.id);
       setBalance(100); // ВРЕМЕННО ПОКАЗЫВАЕМ 100, ПОТОМ ПОДТВЕРДИМ ИЗ БД
       await loadBalanceFromDB(user.id); // ПОДТВЕРЖДАЕМ РЕАЛЬНЫЙ БАЛАНС ИЗ БД
       setAuthMode("authenticated");
@@ -118,7 +114,6 @@ function App() {
     localStorage.removeItem('user');
     setAuthMode("login");
     setBalance(0);
-    setCurrentUserId(null);
   };
 
   // ПРИ ЗАГРУЗКЕ АУТЕНТИФИЦИРОВАННОГО СОСТОЯНИЯ - ЗАГРУЖАЕМ БАЛАНС
@@ -127,7 +122,6 @@ function App() {
       const savedUser = localStorage.getItem('user');
       if (savedUser) {
         const user = JSON.parse(savedUser);
-        setCurrentUserId(user.id);
         loadBalanceFromDB(user.id);
       }
     }
