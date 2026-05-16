@@ -1,7 +1,7 @@
 // components/LoginForm/LoginForm.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
-import { theme } from "../styles/theme";
+import { theme } from "../../styles/theme";
 
 interface LoginFormProps {
   onSuccess: () => void;

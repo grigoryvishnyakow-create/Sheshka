@@ -18,7 +18,7 @@ function Dashboard({ balance }: DashboardProps) {
     <Wrapper>
       <HeroBalance balance={balance} />
       <DailyGoal
-        percent={75}
+        percent={90}
         hint="Выполните еще одно задание, чтобы достичь своей ежедневной цели!"
       />
       <QuestsSection />

@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
 import BottomNavBar from "../widgets/NavMenu";
-import Profile from "../pages/Profile";
+import TeachersPage from "../pages/TeachersPage";
 import Shop from "../pages/Shop";
 import History from "../pages/History";
 import Dashboard from "../pages/Dashboard";
 import Header from "../widgets/Header";
 import RegistrationForm from "../widgets/RegistrationForm/RegistrationForm";
 import LoginForm from "../widgets/RegistrationForm/LoginForm";
-import { theme } from "../widgets/styles/theme";
+import { theme } from "../styles/theme";
 
 type TabId = "dashboard" | "history" | "teachers" | "shop";
 type AuthMode = "login" | "register" | "authenticated";
@@ -49,12 +49,13 @@ function App() {
   const [balance, setBalance] = useState(0);
 
   const handleTabChange = (tabId: string) => {
+    console.log("TAB:", tabId);
     setActiveTab(tabId as TabId);
   };
 
   const handleLoginSuccess = () => {
     setAuthMode("authenticated");
-    setBalance(540); // Set initial balance after login
+    setBalance(100); // Set initial balance after login
   };
 
   const handleRegisterSuccess = () => {
@@ -121,7 +122,7 @@ function App() {
         <main>
           {activeTab === "dashboard" && <Dashboard balance={balance} />}
           {activeTab === "history" && <History />}
-          {activeTab === "teachers" && <Profile />}
+          {activeTab === "teachers" && <TeachersPage />}
           {activeTab === "shop" && <Shop />}
         </main>
         <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />
