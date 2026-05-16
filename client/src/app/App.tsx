@@ -11,7 +11,7 @@ import RegistrationForm from "../widgets/RegistrationForm/RegistrationForm";
 import LoginForm from "../widgets/RegistrationForm/LoginForm";
 import { theme } from "../styles/theme";
 
-type TabId = "dashboard" | "history" | "teachers" | "shop";
+export type TabId = "dashboard" | "history" | "teachers" | "shop";
 type AuthMode = "login" | "register" | "authenticated";
 
 const GlobalStyle = createGlobalStyle`
@@ -47,6 +47,9 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [balance, setBalance] = useState(0);
+  const handleNavigate = (tab: TabId) => {
+    setActiveTab(tab);
+  };
 
   const handleTabChange = (tabId: string) => {
     console.log("TAB:", tabId);
@@ -77,37 +80,37 @@ function App() {
   };
 
   // Show auth screens if not authenticated
-  if (authMode === "login") {
-    return (
-      <ThemeProvider theme={theme}>
-        <GlobalStyle />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
-        />
-        <LoginForm
-          onSuccess={handleLoginSuccess}
-          onRegisterClick={handleShowRegister}
-        />
-      </ThemeProvider>
-    );
-  }
+  // if (authMode === "login") {
+  //   return (
+  //     <ThemeProvider theme={theme}>
+  //       <GlobalStyle />
+  //       <link
+  //         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+  //         rel="stylesheet"
+  //       />
+  //       <LoginForm
+  //         onSuccess={handleLoginSuccess}
+  //         onRegisterClick={handleShowRegister}
+  //       />
+  //     </ThemeProvider>
+  //   );
+  // }
 
-  if (authMode === "register") {
-    return (
-      <ThemeProvider theme={theme}>
-        <GlobalStyle />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
-        />
-        <RegistrationForm
-          onSuccess={handleRegisterSuccess}
-          onLoginClick={handleShowLogin}
-        />
-      </ThemeProvider>
-    );
-  }
+  // if (authMode === "register") {
+  //   return (
+  //     <ThemeProvider theme={theme}>
+  //       <GlobalStyle />
+  //       <link
+  //         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+  //         rel="stylesheet"
+  //       />
+  //       <RegistrationForm
+  //         onSuccess={handleRegisterSuccess}
+  //         onLoginClick={handleShowLogin}
+  //       />
+  //     </ThemeProvider>
+  //   );
+  // }
 
   // Authenticated state - show main app
   return (
@@ -120,7 +123,9 @@ function App() {
       <div>
         <Header balance={balance} onLogout={handleLogout} />
         <main>
-          {activeTab === "dashboard" && <Dashboard balance={balance} />}
+          {activeTab === "dashboard" && (
+            <Dashboard balance={balance} onNavigate={handleNavigate} />
+          )}
           {activeTab === "history" && <History />}
           {activeTab === "teachers" && <TeachersPage />}
           {activeTab === "shop" && <Shop />}

@@ -1,6 +1,11 @@
 import styled from "styled-components";
 import QuestCard from "./QuestCard";
 import SpecialQuestCard from "./SpecialQuestCard";
+import type { TabId } from "../../app/App";
+
+interface Props {
+  onNavigate: (tab: TabId) => void;
+}
 
 const Section = styled.section``;
 
@@ -18,21 +23,6 @@ const Title = styled.h2`
   color: #191c1e;
 `;
 
-const SeeAll = styled.button`
-  font-family: "Inter", sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: #075fab;
-  background: none;
-  border: none;
-  cursor: pointer;
-
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
 const Grid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
@@ -43,27 +33,31 @@ const Grid = styled.div`
   }
 `;
 
-function QuestsSection() {
+function QuestsSection({ onNavigate }: Props) {
   return (
     <Section>
       <Header>
         <Title>Активные квесты</Title>
-        <SeeAll>См. Все</SeeAll>
       </Header>
+
       <Grid>
         <QuestCard
           icon="school"
           title="Узнай больше о своих преподавателях"
-          description="Посетите страницу Преподаватели и ознакомьтесь с биографиями преподавателей, чтобы заработать баллы."
+          description="Посетите страницу Преподаватели..."
           points={50}
+          onStart={() => onNavigate("teachers")}
         />
+
         <QuestCard
           icon="account_balance"
           title="Изучите историю строительства"
-          description="Отсканируйте QR-код, расположенный в главном холле корпуса Б."
+          description="Посетите страницу истории университета..."
           points={100}
           variant="tertiary"
+          onStart={() => onNavigate("history")}
         />
+
         <SpecialQuestCard />
       </Grid>
     </Section>
