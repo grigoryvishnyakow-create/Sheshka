@@ -83,7 +83,7 @@ const TABS: Tab[] = [
   { id: "dashboard", icon: "dashboard", label: "Главная" },
   { id: "history", icon: "account_balance", label: "О ВУЗ" },
   { id: "shop", icon: "shopping_cart", label: "Мерч" },
-  { id: "profile", icon: "person", label: "Преподаватели" },
+  { id: "teachers", icon: "person", label: "Преподаватели" },
 ];
 const BottomNavBar: React.FC<BottomNavBarProps> = ({
   activeTab,

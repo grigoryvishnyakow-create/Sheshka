@@ -1,7 +1,7 @@
 // widgets/Header.tsx (обновленный)
 import React from "react";
 import styled from "styled-components";
-import { theme } from "../widgets/styles/theme";
+import { theme } from "../styles/theme";
 
 interface HeaderProps {
   balance: number;
@@ -27,22 +27,6 @@ const LogoSection = styled.div`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.sm};
-`;
-
-const MenuButton = styled.button`
-  color: ${theme.colors.primary};
-  transition: opacity 0.2s;
-  cursor: pointer;
-  background: none;
-  border: none;
-
-  &:hover {
-    opacity: 0.8;
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
 `;
 
 const Logo = styled.span`
@@ -98,10 +82,7 @@ const Header: React.FC<HeaderProps> = ({ balance, onLogout }) => {
   return (
     <HeaderContainer>
       <LogoSection>
-        <MenuButton>
-          <span className="material-symbols-outlined">menu</span>
-        </MenuButton>
-        <Logo>Sheshi</Logo>
+        <Logo>Шешка</Logo>
       </LogoSection>
       <RightSection>
         <BalanceBadge>

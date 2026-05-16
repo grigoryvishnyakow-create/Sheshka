@@ -150,7 +150,7 @@ function SpecialQuestCard() {
         <Footer>
           <Badge>
             <Icon>eco</Icon>
-            <Points>+1500 баллов</Points>
+            <Points>+1500 шешей</Points>
           </Badge>
           <Button>Перейти</Button>
         </Footer>

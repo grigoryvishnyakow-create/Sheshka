@@ -136,7 +136,7 @@ function QuestCard({
           <Footer>
             <Badge>
               <PointsIcon>eco</PointsIcon>
-              <Points>+{points} баллов</Points>
+              <Points>+{points} шешей</Points>
             </Badge>
             <Button>Начать</Button>
           </Footer>

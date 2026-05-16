@@ -1,7 +1,7 @@
 // components/RegistrationForm/SuccessScreen.tsx
 import React from "react";
 import styled from "styled-components";
-import { theme } from "../styles/theme";
+import { theme } from "../../styles/theme";
 
 const Container = styled.div`
   min-height: 100dvh;
