@@ -3,7 +3,6 @@ import type { Teacher } from "./types";
 import {
   PageContainer,
   BackButton,
-  ContactButton,
   HeroSection,
   HeroLeft,
   HeroAvatar,
@@ -183,20 +182,6 @@ const ErrorMessage = styled.div`
   font-size: 14px;
 `;
 
-// ЗАМЕНИ ПОД СЕБЯ
-const comicImage = "/comics/teacher_comic.jpg";
-
-const quizData = {
-  question: "Какой основной стек технологий преподаёт этот преподаватель?",
-  options: [
-    "Python и Django",
-    "Java и Spring",
-    "JavaScript, TypeScript и Web",
-    "C# и .NET",
-  ],
-  correctIndex: 2,
-};
-
 const TeacherDetail = ({
   teacher,
   onBack,
@@ -212,26 +197,25 @@ const TeacherDetail = ({
   const [error, setError] = useState<string | null>(null);
 
   const rewardPoints = 15;
+  
+  // Проверяем есть ли у преподавателя комикс и тест
+  const hasComicAndQuiz = teacher.comicImage && teacher.quiz;
 
   // Проверка статуса при монтировании
   useEffect(() => {
     const checkStatus = async () => {
-      if (!studentId) {
-        console.log("studentId не передан");
+      if (!studentId || !hasComicAndQuiz) {
         return;
       }
 
       try {
-        console.log("Проверяем статус для studentId:", studentId);
         const res = await fetch(`/api/student/${studentId}/completed-quests`);
         const data = await res.json();
-        console.log("Ответ API:", data);
 
         if (data.success) {
           const completed = data.completed_quests?.some(
             (q: any) => q.quest_id === `comic_teacher_${teacher.id}`,
           );
-          console.log("Квест выполнен?", completed);
           setRewardCollected(completed || false);
         }
       } catch (error) {
@@ -240,14 +224,14 @@ const TeacherDetail = ({
     };
 
     checkStatus();
-  }, [studentId, teacher.id]);
+  }, [studentId, teacher.id, hasComicAndQuiz]);
 
   const handleOpenComic = () => setShowComic(true);
 
   const handleCloseComic = () => {
     setShowComic(false);
-    // Открываем тест ТОЛЬКО если ещё не проходили
-    if (!rewardCollected) {
+    // Открываем тест ТОЛЬКО если ещё не проходили и тест существует
+    if (!rewardCollected && teacher.quiz) {
       setShowQuiz(true);
       setSelectedOption(null);
       setAnswered(false);
@@ -262,23 +246,20 @@ const TeacherDetail = ({
   };
 
   const handleCheckAnswer = async () => {
-    if (selectedOption === null) return;
+    if (selectedOption === null || !teacher.quiz) return;
     if (rewardCollected) {
-      console.log("Награда уже получена");
       return;
     }
 
     setAnswered(true);
 
-    const isCorrect = selectedOption === quizData.correctIndex;
-    console.log("Ответ:", isCorrect ? "Правильный" : "Неправильный");
+    const isCorrect = selectedOption === teacher.quiz.correctIndex;
 
     if (isCorrect && studentId) {
       setIsProcessing(true);
       setError(null);
 
       try {
-        console.log("Отправляем запрос на начисление баллов...");
         const response = await fetch(
           `/api/student/${studentId}/complete-quest`,
           {
@@ -293,7 +274,6 @@ const TeacherDetail = ({
         );
 
         const data = await response.json();
-        console.log("Ответ на начисление:", data);
 
         if (data.success) {
           setRewardCollected(true);
@@ -356,40 +336,42 @@ const TeacherDetail = ({
         </HeroRight>
       </HeroSection>
 
-      <ProgressWrapper>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: 6,
-          }}
-        >
-          <span style={{ fontSize: 12, color: "#888" }}>Прогресс чтения</span>
-          <span style={{ color: "#075fab", fontWeight: 600 }}>100%</span>
-        </div>
-        <ProgressBar>
-          <ProgressFill />
-        </ProgressBar>
-      </ProgressWrapper>
-
-      <ContactButton>Связаться</ContactButton>
-      {!rewardCollected ? (
-        <ComicButton onClick={handleOpenComic} disabled={isProcessing}>
-          <span className="material-symbols-outlined">auto_stories</span>
-          {isProcessing ? "Обработка..." : "Посмотреть комикс"}
-        </ComicButton>
-      ) : (
-        <CompletedBadge>
-          <span className="material-symbols-outlined">check_circle</span>+
-          {rewardPoints} шешек получено
-        </CompletedBadge>
+      {hasComicAndQuiz && (
+        <>
+          <ProgressWrapper>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 6,
+              }}
+            >
+              <span style={{ fontSize: 12, color: "#888" }}>Прогресс чтения</span>
+              <span style={{ color: "#075fab", fontWeight: 600 }}>100%</span>
+            </div>
+            <ProgressBar>
+              <ProgressFill />
+            </ProgressBar>
+          </ProgressWrapper>
+          
+          {!rewardCollected ? (
+            <ComicButton onClick={handleOpenComic} disabled={isProcessing}>
+              {isProcessing ? "Обработка..." : "Посмотреть комикс"}
+            </ComicButton>
+          ) : (
+            <CompletedBadge>
+              <span className="material-symbols-outlined">check_circle</span>+
+              {rewardPoints} шешек получено
+            </CompletedBadge>
+          )}
+        </>
       )}
 
       {/* Модалка комикса */}
-      {showComic && (
+      {showComic && teacher.comicImage && (
         <ComicModal onClick={handleCloseComic}>
           <ComicImage
-            src={comicImage}
+            src={teacher.comicImage}
             alt="Комикс"
             onClick={(e) => e.stopPropagation()}
           />
@@ -397,21 +379,21 @@ const TeacherDetail = ({
       )}
 
       {/* Модалка теста */}
-      {showQuiz && (
+      {showQuiz && teacher.quiz && (
         <QuizOverlay onClick={handleCloseQuiz}>
           <QuizCard onClick={(e) => e.stopPropagation()}>
-            <QuizQuestion>{quizData.question}</QuizQuestion>
+            <QuizQuestion>{teacher.quiz.question}</QuizQuestion>
 
             <OptionList>
-              {quizData.options.map((option, index) => (
+              {teacher.quiz.options.map((option, index) => (
                 <OptionButton
                   key={index}
                   selected={selectedOption === index}
-                  correct={answered && index === quizData.correctIndex}
+                  correct={answered && index === teacher.quiz!.correctIndex}
                   wrong={
                     answered &&
                     selectedOption === index &&
-                    index !== quizData.correctIndex
+                    index !== teacher.quiz!.correctIndex
                   }
                   onClick={() => handleSelectOption(index)}
                   disabled={answered || rewardCollected}
@@ -434,14 +416,14 @@ const TeacherDetail = ({
             {answered && (
               <>
                 <QuizFeedback
-                  correct={selectedOption === quizData.correctIndex}
+                  correct={selectedOption === teacher.quiz.correctIndex}
                 >
-                  {selectedOption === quizData.correctIndex
+                  {selectedOption === teacher.quiz.correctIndex
                     ? "✅ Верно!"
-                    : `❌ Неверно. Правильный ответ: ${quizData.options[quizData.correctIndex]}`}
+                    : `❌ Неверно. Правильный ответ: ${teacher.quiz.options[teacher.quiz.correctIndex]}`}
                 </QuizFeedback>
 
-                {selectedOption === quizData.correctIndex &&
+                {selectedOption === teacher.quiz.correctIndex &&
                   !rewardCollected && (
                     <RewardDisplay>🎉 +{rewardPoints} шешки</RewardDisplay>
                   )}
