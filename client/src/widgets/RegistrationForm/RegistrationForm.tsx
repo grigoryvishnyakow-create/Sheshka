@@ -369,6 +369,7 @@ const validateField = (
         }
         return;
       }
+      localStorage.setItem('user', JSON.stringify(data.student));
       
       setShowSuccess(true);
       setTimeout(() => {

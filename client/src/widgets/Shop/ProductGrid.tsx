@@ -2,6 +2,14 @@
 import React from 'react';
 import styled from 'styled-components';
 import ProductCard from './ProductCard';
+import Z from "../../assets/Значок_КГУ.jpg";
+import O from "../../assets/Блокнот.jpg";
+import V from "../../assets/Худи.jpg";
+import zz from "../../assets/Футболка_ч.jpg";
+import oo from "../../assets/Футболка_б.jpg";
+import vv from "../../assets/Футболка_с.jpg";
+import ZZ from "../../assets/Кепка.jpg";
+import OO from "../../assets/Обложка.jpg";
 
 const Grid = styled.div`
   display: grid;
@@ -21,35 +29,67 @@ export interface Product {
 const products: Product[] = [
   {
     id: 1,
-    title: 'Брендированная сумка',
-    price: 2300,
+    title: 'Значок КГУ',
+    price: 200,
     category: 'Аксессуары',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBV86Rn-PmB7ggcLHnGdojBVUWtgI9FZ5UWwNruFDIb9dQUiWLWyopovS-_2X5JU1so1uUB_34wZvU6iSht0dczWL7h6mVQ4e0f3ZkbGxKEvT1IxlgDUWcAgQUkldeFnQgBvNxhnMfh8K7GeJkA0OzQYIGY990N990g6RjOGZ1w6zy3XkiXHM-VqiBQ-9NxP-_RDb1NUSqtt84RVRnuINplR5XNeYSCBNSuQ_Il9XNRuKtcPvti_Wcs40eweGhP4ybuRicKOV7pn622',
+    image: Z,
     alt: 'A high-quality canvas tote bag in a clean off-white color'
   },
   {
     id: 2,
-    title: 'Керамическая кружка',
-    price: 1200,
-    category: 'Аксессуары',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCz6PFVHL8IcZhkYl4lQveWV39046XHMCfk5jOU35Oa89mdd6mMwU9hqEk8OKn6Hfl4xQZYpY12L_xTUfGF9gwBnIGV_LNx3ldzAo-jT7KyNFHY1RodeSrTgSU57YCtXHdXpXAdbqxKrOSihiCOYTgb3EQrTx5AlmbskWbcpe4Uy2qfAxEGwGn9A8oT0xEeespaeRQE8lJn0Q22-vstorZ1izDO130sZwmr-hEr57Qdjjl5jElZUxedeHEsU5teLAB3Y5qE6SH00pyo',
+    title: 'Блокнот',
+    price: 450,
+    category: 'Канцелярские товары',
+    image: O,
     alt: 'A minimalist matte black ceramic mug'
   },
   {
     id: 3,
-    title: 'Набор блокнотов',
-    price: 1500,
-    category: 'Канцелярские товары',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAvhu-BPW9X_6fGVe1M5GlR_1fO28i4TdIWCihhQu7I4KlBHBtMl4SCalkfIkL07W-E9WHK3V0vo624Bgn3AUo8t9A2bvSPiFRNgAaSMoJwSFsBepRJp8Bdh6ilk3OAXiGfeBoUKLt0VcWog7u7pnrdIgngkOPSq4nuAFS_IIXGuaSWoOttrXAz0_-pwH2U6YJCiMDgksqCTppkV6AywazMe61W7y5h1WC9yezW6cqH71aOeIL1gTskg7lQCTr_0X5Yhav-huoTp2bw',
-    alt: 'Premium soft-touch notebooks'
+    title: 'Кепка>',
+    price: 3000,
+    category: 'Одежда',
+    image: ZZ,
+    alt: 'Classic varsity jacket'
   },
   {
     id: 4,
-    title: 'Куртка-бомбер',
+    title: 'Худи',
     price: 4500,
     category: 'Одежда',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBpYxV1bXcQjVwvWrMzs-Sy0kOjIDF2ZiLmKBPLWMyk5Ol-yodTjnlhUH94ItRDmjbpCEHXPBX2M6hozPPWSR4o07ubBNJ9T0VG375M01AzZzFsW7Hr6-bfG-XlzK4AJOIq5emPm4MNw1glfqV-YVWJf7c0JTGrDwuIrBXImglZ3kwW8xxePbSqDC2Yv99rVpN_cOnO4XqS-VT_kWA8-caoGKC1quDEpOJ-8T75KNAsROJI-PLhP6f-9O054FH_Dpnwd7VGFyZ0lmoe',
+    image: V,
     alt: 'Classic varsity jacket'
+  },
+  {
+    id: 5,
+    title: 'Футболка Черная',
+    price: 2500,
+    category: 'Одежда',
+    image: zz,
+    alt: 'Classic varsity jacket'
+  },
+  {
+    id: 6,
+    title: 'Футболка Белая>',
+    price: 2500,
+    category: 'Одежда',
+    image: oo,
+    alt: 'Classic varsity jacket'
+  },
+  {
+    id: 7,
+    title: 'Футболка Синяя>',
+    price: 2500,
+    category: 'Одежда',
+    image: vv,
+    alt: 'Classic varsity jacket'
+  },
+  {
+    id: 8,
+    title: 'Обложка на зачетку',
+    price: 1500,
+    category: 'Аксессуары',
+    image: OO,
+    alt: 'Premium soft-touch notebooks'
   }
 ];
 

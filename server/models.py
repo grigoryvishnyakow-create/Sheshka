@@ -62,3 +62,15 @@ class CompletedQuest(db.Model):
     __table_args__ = (
         db.UniqueConstraint('student_id', 'quest_id', name='unique_student_quest'),
     )
+
+class Purchase(db.Model):
+    __tablename__ = 'purchases'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    product_id = db.Column(db.Integer, nullable=False)
+    product_title = db.Column(db.String(200), nullable=False)
+    product_price = db.Column(db.Integer, nullable=False)
+    purchased_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    student = db.relationship('Student', backref=db.backref('purchases', lazy=True))

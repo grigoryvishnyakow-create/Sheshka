@@ -1,7 +1,22 @@
 // components/ProductCard.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
+import Modal from "./Modal";
 
+interface Product {
+  id: number;
+  title: string;
+  price: number;
+  category: string;
+  image: string;
+  alt: string;
+}
+
+interface ProductCardProps {
+  product: Product;
+  studentId: number;
+  onBalanceUpdate?: (newBalance: number) => void;
+}
 
 const Card = styled.div`
   display: flex;
@@ -46,8 +61,8 @@ const ProductTitle = styled.h4`
   margin-bottom: 0.25rem;
 `;
 
-const BuyButton = styled.button`
-  background: #006e1d;
+const BuyButton = styled.button<{ disabled?: boolean }>`
+  background: ${(props) => (props.disabled ? "#cccccc" : "#006e1d")};
   font-family: "Inter", sans-serif;
   color: #ffffff;
   padding: 8px 32px;
@@ -55,10 +70,10 @@ const BuyButton = styled.button`
   border: none;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
 
   &:hover {
-    opacity: 0.9;
+    opacity: ${(props) => (props.disabled ? 1 : 0.9)};
   }
 `;
 
@@ -88,23 +103,20 @@ const PriceValue = styled.span`
   color: #004784;
 `;
 
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  category: string;
-  image: string;
-  alt: string;
-}
 
-interface ProductCardProps {
-  product: Product;
-  studentId: number;
-  onBalanceUpdate?: (newBalance: number) => void;
-}
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, studentId, onBalanceUpdate }) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [modal, setModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "success" as "success" | "error" | "warning"
+  });
+
+  const closeModal = () => {
+    setModal(prev => ({ ...prev, isOpen: false }));
+  };
 
   const handleBuy = async () => {
     if (isPurchasing) return;
@@ -112,7 +124,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, studentId, onBalance
     setIsPurchasing(true);
     
     try {
-      const response = await fetch(`/api/student/${studentId}/spend-points`, {
+      const response = await fetch(`http://localhost:5000/api/student/${studentId}/spend-points`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ points: product.price })
@@ -128,36 +140,70 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, studentId, onBalance
           user.points = data.new_points;
           localStorage.setItem('user', JSON.stringify(user));
         }
+
+      setModal({
+          isOpen: true,
+          title: "Покупка успешна! 🎉",
+          message: `${product.title} куплен! Списано ${product.price} шешей`,
+          type: "success"
+        });
         
-        alert(`✅ ${product.title} куплен! Списано ${product.price} шешей`);
-        onBalanceUpdate?.(data.new_points);
+      onBalanceUpdate?.(data.new_points);
       } else {
-        alert(data.message || "Недостаточно шешей для покупки");
+        let message = data.message || "Недостаточно шешей для покупки";
+        let title = "Ошибка покупки";
+        let type: "success" | "error" | "warning" = "error";
+        
+        if (data.error === "insufficient_funds") {
+          title = "Недостаточно шешей";
+          type = "error";
+        }
+        setModal({
+          isOpen: true,
+          title,
+          message,
+          type
+        });
       }
     } catch (error) {
       console.error("Purchase error:", error);
-      alert("Ошибка соединения с сервером");
+      setModal({
+        isOpen: true,
+        title: "Ошибка",
+        message: "Ошибка соединения с сервером",
+        type: "error"
+      });
     } finally {
       setIsPurchasing(false);
     }
   };
 
   return (
-    <Card>
-      <ImageContainer>
-        <ProductImage src={product.image} alt={product.title} />
-      </ImageContainer>
-      <ProductInfo>
-        <ProductTitle>{product.title}</ProductTitle>
-        <PriceWrapper>
-          <PriceValue>{product.price}</PriceValue>
-          <Icon>eco</Icon>
-        </PriceWrapper>
-        <BuyButton onClick={handleBuy} disabled={isPurchasing}>
-          {isPurchasing ? "Обработка..." : "Купить"}
-        </BuyButton>
-      </ProductInfo>
-    </Card>
+    <>
+      <Card>
+        <ImageContainer>
+          <ProductImage src={product.image} alt={product.title} />
+        </ImageContainer>
+        <ProductInfo>
+          <ProductTitle>{product.title}</ProductTitle>
+          <PriceWrapper>
+            <PriceValue>{product.price}</PriceValue>
+            <Icon>eco</Icon>
+          </PriceWrapper>
+          <BuyButton onClick={handleBuy} disabled={isPurchasing}>
+            {isPurchasing ? "Обработка..." : "Купить"}
+          </BuyButton>
+        </ProductInfo>
+      </Card>
+      
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+      />
+    </>
   );
 };
 

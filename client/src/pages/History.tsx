@@ -50,9 +50,14 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
           const questIds = data.completed_quests.map((q: any) => q.quest_id);
           setCompletedQuests(questIds);
           
-          // ВЫЧИСЛЯЕМ ПРОГРЕСС (ВСЕГО 3 НЕЗАЛОКАННЫХ КВЕСТА)
-          const totalQuests = 2; // foundation и main-hall
-          const percent = Math.round((questIds.length / totalQuests) * 100);
+          // ТОЛЬКО КВЕСТЫ, ОТНОСЯЩИЕСЯ К ИСТОРИИ
+          const historyQuestIds = ["foundation", "main-hall"];
+          const completedHistoryQuests = questIds.filter((id: string) => 
+            historyQuestIds.includes(id)
+          );
+          
+          const totalQuests = historyQuestIds.length;
+          const percent = Math.round((completedHistoryQuests.length / totalQuests) * 100);
           setProgressPercent(Math.min(100, percent));
           onProgressUpdate?.(Math.min(100, percent));
         }
@@ -77,7 +82,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
   };
 
   const handlePointsEarned = async (_points: number, newBalance: number) => {
-    // ОБНОВЛЯЕМ СПИСОК ВЫПОЛНЕННЫХ КВЕСТОВ
+    
     const response = await fetch(`/api/student/${studentId}/completed-quests`);
     const data = await response.json();
     
@@ -85,9 +90,14 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
       const questIds = data.completed_quests.map((q: any) => q.quest_id);
       setCompletedQuests(questIds);
       
-      // ОБНОВЛЯЕМ ПРОГРЕСС
-      const totalQuests = 2;
-      const percent = Math.round((questIds.length / totalQuests) * 100);
+      // ТОЛЬКО КВЕСТЫ ИСТОРИИ
+      const historyQuestIds = ["foundation", "main-hall"];
+      const completedHistoryQuests = questIds.filter((id: string) => 
+        historyQuestIds.includes(id)
+      );
+      
+      const totalQuests = historyQuestIds.length;
+      const percent = Math.round((completedHistoryQuests.length / totalQuests) * 100);
       setProgressPercent(Math.min(100, percent));
       onProgressUpdate?.(Math.min(100, percent));
     }

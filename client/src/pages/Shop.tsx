@@ -1,4 +1,4 @@
-// pages/UniversityShop.tsx
+// pages/Shop.tsx
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import HeroSection from '../widgets/Shop/HeroSection';
@@ -27,8 +27,8 @@ const Section = styled.section`
   margin-bottom: 3rem;
 `;
 
-const Shop: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState('All Items');
+const Shop: React.FC<ShopProps> = ({ studentId, onBalanceUpdate }) => {
+  const [activeCategory, setActiveCategory] = useState('Всё');
 
   return (
     <PageContainer>
@@ -44,7 +44,11 @@ const Shop: React.FC = () => {
       </Section>
 
       <Section>
-        <ProductGrid activeCategory={activeCategory} />
+        <ProductGrid 
+          activeCategory={activeCategory}
+          studentId={studentId}
+          onBalanceUpdate={onBalanceUpdate}
+        />
       </Section>
     </PageContainer>
   );

@@ -68,7 +68,7 @@ function Dashboard({
   };
 
   if (loading) {
-    return <Wrapper>Загрузка...</Wrapper>;
+    return <Wrapper>Шешкуемся...</Wrapper>;
   }
 
   return (

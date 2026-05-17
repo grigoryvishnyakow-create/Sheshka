@@ -116,7 +116,7 @@ function App() {
     if (savedUser) {
       const user = JSON.parse(savedUser);
       setCurrentUserId(user.id);
-      setBalance(100);
+      setBalance(user.points || 100);
       await loadBalanceFromDB(user.id);
       setAuthMode("authenticated");
     } else {
@@ -204,7 +204,11 @@ function App() {
         rel="stylesheet"
       />
       <div>
-        <Header balance={balance} onLogout={handleLogout} />
+        <Header 
+          balance={balance} 
+          onLogout={handleLogout}
+          onLogoClick={() => setActiveTab("dashboard")}
+        />
         <main>
           {activeTab === "dashboard" && (
             <Dashboard

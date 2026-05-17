@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from config import Config
 import re
-from models import db, Student, CompletedQuest
+from models import db, Student, CompletedQuest, Purchase
 from datetime import datetime
 
 # Инициализация приложения
@@ -701,6 +701,116 @@ def get_completed_quests(student_id):
                 'completed_at': q.completed_at.isoformat()
             } for q in completed],
             'total_count': len(completed)
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
+    
+@app.route('/api/student/<int:student_id>/purchase', methods=['POST'])
+def purchase_product(student_id):
+    """ПОКУПКА ТОВАРА - СПИСАНИЕ ШЕШЕЙ И СОХРАНЕНИЕ В ИСТОРИЮ"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('product_id') or not data.get('price') or not data.get('title'):
+            return jsonify({
+                'success': False,
+                'error': 'missing_fields',
+                'message': 'Требуются product_id, price и title'
+            }), 400
+        
+        student = Student.query.get(student_id)
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': 'not_found',
+                'message': 'Студент не найден'
+            }), 404
+        
+        points_to_spend = int(data['price'])
+        
+        if student.points < points_to_spend:
+            return jsonify({
+                'success': False,
+                'error': 'insufficient_funds',
+                'message': f'Недостаточно шешей. У вас {student.points}, требуется {points_to_spend}',
+                'current_points': student.points
+            }), 400
+        
+        # ПРОВЕРКА - НЕ ПОКУПАЛ ЛИ УЖЕ ЭТОТ ТОВАР
+        existing_purchase = Purchase.query.filter_by(
+            student_id=student_id,
+            product_id=data['product_id']
+        ).first()
+        
+        if existing_purchase:
+            return jsonify({
+                'success': False,
+                'error': 'already_purchased',
+                'message': f'Вы уже приобрели "{data["title"]}"',
+                'already_purchased': True
+            }), 400
+        
+        # СПИСЫВАЕМ ШЕШИ
+        old_points = student.points
+        student.points -= points_to_spend
+        
+        # СОХРАНЯЕМ ПОКУПКУ
+        new_purchase = Purchase(
+            student_id=student_id,
+            product_id=data['product_id'],
+            product_title=data['title'],
+            product_price=points_to_spend
+        )
+        
+        db.session.add(new_purchase)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'✅ {data["title"]} куплен! Списано {points_to_spend} шешей',
+            'old_points': old_points,
+            'new_points': student.points,
+            'spent_points': points_to_spend,
+            'purchase': {
+                'id': new_purchase.id,
+                'product_title': new_purchase.product_title,
+                'product_price': new_purchase.product_price,
+                'purchased_at': new_purchase.purchased_at.isoformat()
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/student/<int:student_id>/purchases', methods=['GET'])
+def get_purchases(student_id):
+    """ПОЛУЧЕНИЕ СПИСКА ПОКУПОК СТУДЕНТА"""
+    try:
+        purchases = Purchase.query.filter_by(student_id=student_id).order_by(
+            Purchase.purchased_at.desc()
+        ).all()
+        
+        return jsonify({
+            'success': True,
+            'purchases': [{
+                'id': p.id,
+                'product_id': p.product_id,
+                'product_title': p.product_title,
+                'product_price': p.product_price,
+                'purchased_at': p.purchased_at.isoformat()
+            } for p in purchases],
+            'total_count': len(purchases)
         }), 200
         
     except Exception as e:

@@ -1,6 +1,7 @@
 // components/HeroSection.tsx
 import React from "react";
 import styled from "styled-components";
+import Z from "../../assets/Значок_КГУ.jpg";
 
 const HeroContainer = styled.div`
   font-family: "Inter", sans-serif;
@@ -64,8 +65,8 @@ const HeroDescription = styled.p`
 
 const heroData = {
   image:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBJORk6vAmqtNum2QX3l6Fl49p6IFd-ClENUNJ2ZjEF3sWQCqsFOXY4jzsMwa0Xltgvog0FCHCZGF38MTGNFMwUO1lH_EWo0a3t08V8_kmXd-r1RTgo9E-EQw4_X_q-2udNobUw59MV92YLE8jOfm3mQLDFzPFzBkfzOabcrzAYovsg5bVs7Ev_PP2T2b7YvpD2nfPEUBqrGO4GPe8JepQROPdLcAz53U7LTz2g7DThwTOsuyrYdCh7ogWr_OyFxuDNeYbMK7sOX8cd",
-  title: "Университетское худи",
+    Z,
+  title: "Значок члена семьи",
   description: "Создано ради комфорта.",
   badge: "Ограниченная серия",
 };

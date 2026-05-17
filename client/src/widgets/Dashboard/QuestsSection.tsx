@@ -48,33 +48,32 @@ function QuestsSection({
   const [loading, setLoading] = useState(true);
 
   // ЗАГРУЗКА ВЫПОЛНЕННЫХ КВЕСТОВ
-  useEffect(() => {
-    const loadCompletedQuests = async () => {
-      try {
-        const response = await fetch(
-          `/api/student/${studentId}/completed-quests`,
-        );
-        const data = await response.json();
-        if (data.success) {
-          const completedIds = data.completed_quests.map(
-            (q: any) => q.quest_id,
-          );
-          setCompletedQuests(completedIds);
-        }
-      } catch (error) {
-        console.error("Ошибка загрузки выполненных квестов:", error);
-      } finally {
-        setLoading(false);
+  const loadCompletedQuests = async () => {
+    try {
+      const response = await fetch(`/api/student/${studentId}/completed-quests`);
+      const data = await response.json();
+      if (data.success) {
+        const completedIds = data.completed_quests.map((q: any) => q.quest_id);
+        setCompletedQuests(completedIds);
       }
-    };
+    } catch (error) {
+      console.error("Ошибка загрузки выполненных квестов:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (studentId) {
       loadCompletedQuests();
     }
   }, [studentId]);
 
   const handleQuestComplete = async (points: number) => {
-    // ОБНОВЛЯЕМ БАЛАНС В APP
+    // ПЕРЕЗАГРУЖАЕМ СПИСОК ВЫПОЛНЕННЫХ КВЕСТОВ
+    await loadCompletedQuests();
+    
+    // ОБНОВЛЯЕМ БАЛАНС
     const response = await fetch(`/api/student/${studentId}/balance`);
     const data = await response.json();
     if (data.success) {
@@ -114,10 +113,10 @@ function QuestsSection({
           description="Посетите страницу истории университета..."
           points={100}
           variant="tertiary"
-          questId="history_quest"
+          questId="dashboard_history_quest"
           studentId={studentId}
           onComplete={handleQuestComplete}
-          disabled={completedQuests.includes("history_quest")}
+          disabled={completedQuests.includes("dashboard_history_quest")}
           onStart={() => onNavigate("history")}
         />
 

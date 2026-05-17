@@ -6,6 +6,7 @@ import { theme } from "../styles/theme";
 interface HeaderProps {
   balance: number;
   onLogout?: () => void;
+  onLogoClick?: () => void;
 }
 
 const HeaderContainer = styled.header`
@@ -27,6 +28,7 @@ const LogoSection = styled.div`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.sm};
+  cursor: pointer;
 `;
 
 const Logo = styled.span`
@@ -78,10 +80,10 @@ const LogoutButton = styled.button`
   }
 `;
 
-const Header: React.FC<HeaderProps> = ({ balance, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ balance, onLogout, onLogoClick  }) => {
   return (
     <HeaderContainer>
-      <LogoSection>
+      <LogoSection onClick={onLogoClick}>
         <Logo>Шешка</Logo>
       </LogoSection>
       <RightSection>
