@@ -154,7 +154,7 @@ function SpecialQuestCard() {
           </Badge>
           <Button
             onClick={() =>
-              window.open("https://docs.google.com/forms/u/0/", "_blank")
+              window.open("https://docs.google.com/forms/d/e/1FAIpQLSfOQwV4U6MhXokqqwmvHQXT7bY-kLM1lW817E17WNOTbtLmWA/viewform?usp=publish-editor", "_blank")
             }
           >
             Перейти

@@ -17,8 +17,10 @@ interface Props {
 }
 
 const TeacherCard = ({ teacher, onClick }: Props) => {
+  const isTutor = teacher.isTutor === true;
+
   return (
-    <Card onClick={() => onClick(teacher)}>
+    <Card onClick={() => !isTutor && onClick(teacher)}>
       <CardHeader>
         <Avatar src={teacher.avatar} />
         <CardInfo>
@@ -29,14 +31,26 @@ const TeacherCard = ({ teacher, onClick }: Props) => {
       </CardHeader>
       <Tags tags={teacher.tags} />
 
-      <ViewButton
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick(teacher);
-        }}
-      >
-        Подробнее
-      </ViewButton>
+      {isTutor ? (
+        <ViewButton
+          as="a"
+          href="https://vk.com/natali_lisina"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ textDecoration: "none", display: "block", textAlign: "center" }}
+        >
+          Связаться
+        </ViewButton>
+      ) : (
+        <ViewButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick(teacher);
+          }}
+        >
+          Подробнее
+        </ViewButton>
+      )}
     </Card>
   );
 };

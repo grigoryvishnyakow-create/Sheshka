@@ -10,6 +10,7 @@ interface Product {
   category: string;
   image: string;
   alt: string;
+  inDevelopment?: boolean;
 }
 
 interface ProductCardProps {
@@ -42,6 +43,23 @@ const ProductImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+`;
+
+const DevelopmentOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  z-index: 2;
+  border-radius: 0.75rem;
 `;
 
 const ProductInfo = styled.div`
@@ -103,8 +121,6 @@ const PriceValue = styled.span`
   color: #004784;
 `;
 
-
-
 const ProductCard: React.FC<ProductCardProps> = ({ product, studentId, onBalanceUpdate }) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [modal, setModal] = useState({
@@ -117,6 +133,28 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, studentId, onBalance
   const closeModal = () => {
     setModal(prev => ({ ...prev, isOpen: false }));
   };
+
+  // ЕСЛИ ТОВАР В РАЗРАБОТКЕ
+  if (product.inDevelopment) {
+    return (
+      <Card>
+        <ImageContainer>
+          <ProductImage src={product.image} alt={product.title} />
+          <DevelopmentOverlay>В разработке</DevelopmentOverlay>
+        </ImageContainer>
+        <ProductInfo>
+          <ProductTitle>{product.title}</ProductTitle>
+          <PriceWrapper>
+            <PriceValue>{product.price}</PriceValue>
+            <Icon>eco</Icon>
+          </PriceWrapper>
+          <BuyButton disabled={true}>
+            Недоступно
+          </BuyButton>
+        </ProductInfo>
+      </Card>
+    );
+  }
 
   const handleBuy = async () => {
     if (isPurchasing) return;
@@ -141,14 +179,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, studentId, onBalance
           localStorage.setItem('user', JSON.stringify(user));
         }
 
-      setModal({
+        setModal({
           isOpen: true,
           title: "Покупка успешна! 🎉",
           message: `${product.title} куплен! Списано ${product.price} шешей`,
           type: "success"
         });
         
-      onBalanceUpdate?.(data.new_points);
+        onBalanceUpdate?.(data.new_points);
       } else {
         let message = data.message || "Недостаточно шешей для покупки";
         let title = "Ошибка покупки";

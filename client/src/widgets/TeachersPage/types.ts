@@ -8,4 +8,12 @@ export interface Teacher {
   experience: number;
   tags: string[];
   description: string;
+  isTutor?: boolean;
+  // Новые поля
+  comicImage?: string;  // URL картинки комикса
+  quiz?: {              // Данные теста
+    question: string;
+    options: string[];
+    correctIndex: number;
+  };
 }

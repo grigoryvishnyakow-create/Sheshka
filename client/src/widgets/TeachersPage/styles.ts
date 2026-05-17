@@ -44,6 +44,7 @@ export const TeachersGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
+  margin-top: 15px
 `;
 
 /* ===== Card ===== */
@@ -122,6 +123,7 @@ export const StatLabel = styled.span`
 /* ===== Tags ===== */
 
 export const TagsContainer = styled.div`
+  margin-top: 12px;
   display: flex;
   gap: 6px;
   flex-wrap: wrap;

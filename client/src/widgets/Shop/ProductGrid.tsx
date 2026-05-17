@@ -24,6 +24,7 @@ export interface Product {
   category: string;
   image: string;
   alt: string;
+  inDevelopment?: boolean;
 }
 
 const products: Product[] = [
@@ -83,14 +84,15 @@ const products: Product[] = [
     image: vv,
     alt: 'Classic varsity jacket'
   },
-  {
-    id: 8,
-    title: 'Обложка на зачетку',
-    price: 1500,
-    category: 'Аксессуары',
-    image: OO,
-    alt: 'Premium soft-touch notebooks'
-  }
+{
+  id: 8,
+  title: 'Обложка на зачетку',
+  price: 1500,
+  category: 'Аксессуары',
+  image: OO,
+  alt: 'Premium soft-touch notebooks',
+  inDevelopment: true, // ДОБАВЬТЕ ЭТУ СТРОКУ
+}
 ];
 
 interface ProductGridProps {
