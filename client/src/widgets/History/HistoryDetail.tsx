@@ -301,14 +301,14 @@ const quizData: Record<
   { question: string; options: string[]; correctIndex: number }
 > = {
   foundation: {
-    question: "В каком году был заложен первый камень корпуса Б?",
-    options: ["1885", "1890", "1895", "1900"],
+    question: "В каком году корпус Б открыл свои двери студентам?",
+    options: ["1885", "2024", "2022", "1900"],
     correctIndex: 1,
   },
   "main-hall": {
     question:
-      "Сколько лауреатов Нобелевской премии упоминается в истории Главного хола?",
-    options: ["Два", "Три", "Четыре", "Пять"],
+      "Кто стал победителем турнира по CS2 в Костромском государственном университете?",
+    options: ["Команда Goat's (Костромской энергетический техникум)", "Команда Newbies (сборная КГУ и техникума)", "Сборная команда КГУ", "Команда Spirit Cyber"],
     correctIndex: 1,
   },
   default: {
@@ -451,7 +451,7 @@ const HistoryDetail: React.FC<Props> = ({ entry, studentId, onBack, onPointsEarn
             <StatLabel>Год основания</StatLabel>
           </StatCard>
           <StatCard>
-            <StatValue>100%</StatValue>
+            <StatValue>90%</StatValue>
             <StatLabel>Уровень достоверности</StatLabel>
           </StatCard>
         </StatsGrid>
@@ -475,7 +475,7 @@ const HistoryDetail: React.FC<Props> = ({ entry, studentId, onBack, onPointsEarn
             }}
           >
             <span className="material-symbols-outlined">check_circle</span>
-            Награда получена! +{rewardPoints} 🌱
+            Награда получена! +{rewardPoints} <span className="material-symbols-outlined">eco</span>
           </TestButton>
         )}
 
@@ -531,7 +531,7 @@ const HistoryDetail: React.FC<Props> = ({ entry, studentId, onBack, onPointsEarn
 
                 {isCorrect && !rewardCollected && (
                   <RewardDisplay>
-                    <span>🌱</span> +{rewardPoints} баллов
+                    <span className="material-symbols-outlined">eco</span> +{rewardPoints} шешей
                   </RewardDisplay>
                 )}
 

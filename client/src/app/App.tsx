@@ -204,7 +204,11 @@ function App() {
         rel="stylesheet"
       />
       <div>
-        <Header balance={balance} onLogout={handleLogout} />
+        <Header 
+          balance={balance} 
+          onLogout={handleLogout}
+          onLogoClick={() => setActiveTab("dashboard")}
+        />
         <main>
           {activeTab === "dashboard" && (
             <Dashboard

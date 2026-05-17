@@ -13,6 +13,11 @@ import {
 const TeachersPage = () => {
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [studentPoints, setStudentPoints] = useState(() => {
+    // Загружаем баллы из localStorage
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser).points || 0 : 0;
+  });
 
   const departments = ["all", ...new Set(teachers.map((t) => t.department))];
 
@@ -21,11 +26,24 @@ const TeachersPage = () => {
       ? teachers
       : teachers.filter((t) => t.department === activeFilter);
 
+  // Получаем ID студента (замени на свой способ получения)
+  const studentId = (() => {
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser).id : 1; // если нет id, ставим 1 для теста
+  })();
+
+  const handlePointsEarned = (points: number, newBalance: number) => {
+    setStudentPoints(newBalance);
+    console.log(`+${points} баллов! Новый баланс: ${newBalance}`);
+  };
+
   if (selectedTeacher) {
     return (
       <TeacherDetail
         teacher={selectedTeacher}
         onBack={() => setSelectedTeacher(null)}
+        studentId={studentId}
+        onPointsEarned={handlePointsEarned}
       />
     );
   }
